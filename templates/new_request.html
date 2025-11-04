@@ -1,0 +1,599 @@
+{% extends "base.html" %}
+{% block title %}New Asset Request{% endblock %}
+
+{% block content %}
+<style>
+    /* These are the styles from your file */
+    #ice-cream-fields {
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+    }
+    #ice-cream-fields.open {
+        max-height: 500px; /* Set to a height larger than the content */
+        opacity: 1;
+    }
+    /* Simple card styling (can be in your main CSS) */
+    .card {
+        background-color: #ffffff;
+        border-radius: 0.75rem; /* rounded-xl */
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-lg */
+        margin-bottom: 1.5rem; /* mb-6 */
+        overflow: hidden;
+    }
+    .card-header {
+        font-size: 1.125rem; /* text-lg */
+        font-weight: 600; /* font-semibold */
+        padding: 1rem 1.5rem; /* px-6 py-4 */
+        border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+        color: #1f2937; /* text-gray-800 */
+        display: flex;
+        align-items: center;
+    }
+    .card-header .fa {
+        margin-right: 0.75rem; /* mr-3 */
+        color: #008a4c; /* brand-primary */
+    }
+    .card-content {
+        padding: 1.5rem; /* p-6 */
+    }
+    .form-input, .form-select {
+        display: block;
+        width: 100%;
+        border-radius: 0.5rem; /* rounded-lg */
+        border: 1px solid #d1d5db; /* border-gray-300 */
+        padding: 0.75rem 1rem; /* py-3 px-4 */
+        box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); /* shadow-sm */
+    }
+    .form-input:focus, .form-select:focus {
+        border-color: #008a4c;
+        box-shadow: 0 0 0 3px rgba(0, 138, 76, 0.2);
+        outline: none;
+    }
+    /* Button styles (you had these in base_fullscreen.html) */
+    .btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        padding: 0.75rem 1.25rem; border: 1px solid transparent;
+        font-size: 0.875rem; font-weight: 500; border-radius: 0.5rem;
+        box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        transition: all 0.2s ease-in-out; cursor: pointer;
+    }
+    .btn-primary { /* This is the main GREEN button */
+        color: #ffffff; background-color: #008a4c; /* brand-primary */
+    }
+    .btn-primary:hover { background-color: #00723d; }
+    .btn-secondary {
+        color: #374151; /* text-gray-700 */
+        background-color: #ffffff; /* bg-white */
+        border-color: #d1d5db; /* border-gray-300 */
+    }
+    .btn-secondary:hover { background-color: #f9fafb; /* bg-gray-50 */ }
+</style>
+
+<form id="request-form" class="max-w-2xl mx-auto" method="POST" action="{{ url_for('new_request') }}">
+    {{ form.hidden_tag() }}
+    <div class="card">
+        <div class="card-header">
+            <i class="fa fa-truck"></i>
+            Distributor & Asset
+        </div>
+        <div class="card-content space-y-6">
+            <div>
+                <label for="distributor_name" class="block text-sm font-medium text-gray-700 mb-1">Distributor Name</label>
+                {{ form.distributor_name(id="distributor_name", class="form-select") }} {# <-- Input Field #}
+                <div id="distributor-details" class="mt-3 text-sm text-gray-600 p-4 bg-gray-50 rounded-lg hidden border">
+                    <p><strong>Code:</strong> <span id="dist-code"></span></p>
+                    <p><strong>Town:</strong> <span id="dist-town"></span></p>
+                    <p><strong>BM:</strong> <span id="dist-bm"></span></p>
+                </div>
+            </div>
+            <div>
+                <label for="asset_model" class="block text-sm font-medium text-gray-700 mb-1">Asset Model</label>
+                {{ form.asset_model(id="asset_model", class="form-select") }} {# <-- Input Field #}
+            </div>
+            <div>
+                <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category (Profile of Outlet)</label>
+                {{ form.category(id="category", class="form-select") }} {# <-- Input Field #}
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+         <div class="card-header">
+            <i class="fa fa-store"></i>
+            Retailer Information
+        </div>
+        <div class="card-content space-y-6">
+            <div>
+                <label for="retailer_name" class="block text-sm font-medium text-gray-700 mb-1">Retailer Name</label>
+                {{ form.retailer_name(id="retailer_name", class="form-input") }} {# <-- Input Field #}
+            </div>
+            <div>
+                <label for="retailer_contact" class="block text-sm font-medium text-gray-700 mb-1">Retailer Contact (10 digits)</label>
+                {{ form.retailer_contact(id="retailer_contact", class="form-input") }} {# <-- Input Field #}
+                <div id="phone-check-result" class="mt-1 text-xs"></div>
+            </div>
+            <div>
+                <label for="area_town" class="block text-sm font-medium text-gray-700 mb-1">Area / Town</label>
+                {{ form.area_town(id="area_town", class="form-input") }} {# <-- Input Field #}
+            </div>
+            <div>
+                <label for="landmark" class="block text-sm font-medium text-gray-700 mb-1">Nearest Landmark</label>
+                {{ form.landmark(id="landmark", class="form-input") }} {# <-- Input Field #}
+            </div>
+            <div>
+                <label for="retailer_address" class="block text-sm font-medium text-gray-700 mb-1">Retailer Address</label>
+                {{ form.retailer_address(id="retailer_address", rows=3, class="form-input") }} {# <-- Input Field #}
+            </div>
+            <div>
+                <label for="retailer_email" class="block text-sm font-medium text-gray-700 mb-1">Retailer Email (Optional)</label>
+                {{ form.retailer_email(id="retailer_email", class="form-input", type="email") }} {# <-- Input Field #}
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <i class="fa fa-clipboard-check"></i>
+            Sales Details
+        </div>
+        <div class="card-content space-y-6">
+            <div>
+                <label for="placement_date" class="block text-sm font-medium text-gray-700 mb-1">Placement Expected Date</label>
+                {{ form.placement_date(id="placement_date", type="date", class="form-input") }} {# <-- Input Field #}
+            </div>
+            <div>
+                <label for="selling_ice_cream" class="block text-sm font-medium text-gray-700 mb-1">Presently Selling Ice Cream?</label>
+                {{ form.selling_ice_cream(id="selling_ice_cream", class="form-select") }} {# <-- Input Field #}
+            </div>
+
+            <div id="ice-cream-fields"> 
+                <div class="space-y-6 pt-6 border-t">
+                    <div>
+                        <label for="monthly_sales" class="block text-sm font-medium text-gray-700 mb-1">Monthly Sales Value (₹)</label>
+                        {{ form.monthly_sales(id="monthly_sales", class="form-input", type="number") }}
+                    </div>
+                    <div>
+                        <label for="ice_cream_brands" class="block text-sm font-medium text-gray-700 mb-1">Ice Cream Brands Available (Which Brands)</label>
+                        {{ form.ice_cream_brands(id="ice_cream_brands", rows=3, class="form-input", placeholder="e.g. Amul, Vadilal, etc.") }}
+                    </div>
+                    <div>
+                        <label for="competitor_assets" class="block text-sm font-medium text-gray-700 mb-1">Competitor Assets?</label>
+                        {{ form.competitor_assets(id="competitor_assets", class="form-select") }}
+                    </div>
+                    <div>
+                        <label for="signage_availability" class="block text-sm font-medium text-gray-700 mb-1">Signage Availability?</label>
+                        {{ form.signage_availability(id="signage_availability", class="form-select") }}
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label for="willing_for_signage" class="block text-sm font-medium text-gray-700 mb-1">Willing for HFL Signage?</label>
+                {{ form.willing_for_signage(id="willing_for_signage", class="form-select") }}
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <i class="fa fa-camera-retro"></i>
+            Location & Photo
+        </div>
+        <div class="card-content space-y-6">
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700">Geolocation</label>
+                <button type="button" id="get-location-btn" class="btn btn-secondary w-full py-3">
+                    <i class="fa fa-location-crosshairs mr-2"></i> Get Current Location
+                </button>
+                <div id="location-status" class="pt-2 text-sm text-center text-gray-600">Location not set.</div>
+                {{ form.latitude(id="latitude", class="hidden") }}
+                    {{ form.longitude(id="longitude", class="hidden") }}
+                    {% if form.latitude.errors or form.longitude.errors %}
+                        <p class="text-red-600 text-sm mt-1">
+                            {% for error in form.latitude.errors %}{{ error }}{% endfor %}
+                            {% for error in form.longitude.errors %}{{ error }}{% endfor %}
+                        </p>
+                    {% endif %}
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700">Shop Photo</label>
+                <button type="button" id="start-camera-btn" class="btn btn-secondary w-full py-3">
+                    <i class="fa fa-camera mr-2"></i> Open Camera
+                </button>
+                
+                <!--
+                ============================================================
+                THIS IS THE MODIFIED SECTION
+                ============================================================
+                -->
+                <div id="camera-container" class="mt-4 hidden">
+                    <video id="camera-video" playsinline autoplay class="w-full h-auto rounded-lg border bg-gray-900"></video>
+                    <div class="mt-2 grid grid-cols-2 gap-2">
+                         <button type="button" id="click-photo-btn" class="w-full btn btn-primary py-3">
+                            Capture Photo
+                        </button>
+                        <!-- NEW "Switch Camera" BUTTON -->
+                        <button type="button" id="switch-camera-btn" class="w-full btn btn-secondary py-3">
+                            <i class="fa fa-sync-alt mr-2"></i> Switch
+                        </button>
+                    </div>
+                </div>
+                <!--
+                ============================================================
+                END OF MODIFIED SECTION
+                ============================================================
+                -->
+
+                <div id="photo-preview-container" class="mt-4 hidden">
+                    <img id="photo-preview" src="" alt="Photo Preview" class="w-full h-auto rounded-lg border shadow-sm">
+                    <button type="button" id="retake-photo-btn" class="mt-2 w-full btn bg-yellow-500 text-white hover:bg-yellow-600 py-3">
+                        Retake Photo
+                    </button>
+                    {{ form.captured_photo(id="captured_photo", class="hidden") }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-6">
+        <button type="submit" id="submit-btn" class="btn btn-primary w-full py-3 text-base font-medium shadow-lg disabled:bg-gray-400">
+            <i class="fa fa-check mr-2"></i> Submit Request
+        </button>
+    </div>
+</form>
+
+<div id="toast-container" class="fixed top-20 right-4 z-50 w-full max-w-sm space-y-3">
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // --- This function creates the styled toasts dynamically ---
+    function showToast(message, category = 'info') {
+        const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) return;
+
+        const icons = {
+            success: 'fa-check-circle',
+            danger: 'fa-times-circle',
+            info: 'fa-info-circle',
+            warning: 'fa-exclamation-triangle'
+        };
+        const colors = {
+            success: 'bg-green-50 text-green-800',
+            danger: 'bg-red-50 text-red-800',
+            info: 'bg-blue-50 text-blue-800',
+            warning: 'bg-yellow-50 text-yellow-800'
+        };
+
+        const iconClass = icons[category] || icons['info'];
+        const colorClass = colors[category] || colors['info'];
+
+        const toast = document.createElement('div');
+        toast.className = `p-4 mb-3 rounded-lg shadow-lg flex items-start ${colorClass}`;
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            <div class="mr-3 text-lg">
+                <i class="fa ${iconClass}"></i>
+            </div>
+            <p class="text-sm font-medium">${message}</p>
+            <button type="button" class="ml-auto -mx-1.5 -my-1.5 p-1.5 inline-flex h-8 w-8 rounded-lg" onclick="this.parentElement.remove()">
+                <i class="fa fa-times"></i>
+            </button>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        // Auto-dismiss
+        setTimeout(() => {
+            if (!toast) return;
+            toast.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 500);
+        }, 5000);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Form Elements ---
+        const distributorSelect = document.getElementById('distributor_name');
+        const distributorDetails = document.getElementById('distributor-details');
+        const distCode = document.getElementById('dist-code');
+        const distTown = document.getElementById('dist-town');
+        const distBm = document.getElementById('dist-bm');
+
+        const sellingIceCream = document.getElementById('selling_ice_cream');
+        const iceCreamFields = document.getElementById('ice-cream-fields');
+
+        const getLocationBtn = document.getElementById('get-location-btn');
+        const locationStatus = document.getElementById('location-status');
+        const latitudeInput = document.getElementById('latitude');
+        const longitudeInput = document.getElementById('longitude');
+
+        const startCameraBtn = document.getElementById('start-camera-btn');
+        const cameraContainer = document.getElementById('camera-container');
+        const video = document.getElementById('camera-video');
+        const clickPhotoBtn = document.getElementById('click-photo-btn');
+        const photoPreviewContainer = document.getElementById('photo-preview-container');
+        const canvas = document.createElement('canvas'); // Create canvas in memory
+        const photoPreview = document.getElementById('photo-preview');
+        const retakePhotoBtn = document.getElementById('retake-photo-btn');
+        const capturedPhotoInput = document.getElementById('captured_photo'); // The hidden input
+
+        // --- NEW ---
+        const switchCameraBtn = document.getElementById('switch-camera-btn');
+        let currentFacingMode = 'environment'; // Start with the back camera ('user' for front)
+        // --- END NEW ---
+
+        const phoneInput = document.getElementById('retailer_contact');
+        const phoneCheckResult = document.getElementById('phone-check-result');
+        const placementDateInput = document.getElementById('placement_date');
+
+        const form = document.getElementById('request-form');
+        const submitBtn = document.getElementById('submit-btn');
+
+        let distributorsData = [];
+        let stream = null;
+        
+        // --- Auto-fill placement date ---
+        if (!placementDateInput.value) {
+            placementDateInput.value = new Date().toISOString().split('T')[0];
+        }
+
+        // 1. Load Distributors
+        distributorSelect.innerHTML = '<option value="">Loading distributors...</option>';
+        fetch("{{ url_for('get_distributors') }}")
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok) {
+                    distributorsData = data.distributors;
+                    distributorSelect.innerHTML = '<option value="">Select Distributor</option>';
+                    data.distributors.forEach(dist => {
+                        const option = new Option(dist.name, dist.name);
+                        distributorSelect.add(option);
+                    });
+                } else {
+                    distributorSelect.innerHTML = '<option value="">Error loading</option>';
+                    console.error('Failed to load distributors');
+                }
+            });
+
+        // 2. Show Distributor Details
+        distributorSelect.addEventListener('change', function() {
+            const selectedName = this.value;
+            const dist = distributorsData.find(d => d.name === selectedName);
+            if (dist) {
+                distCode.textContent = dist.code || 'N/A';
+                distTown.textContent = dist.town || 'N/A';
+                distBm.textContent = dist.asmBm || 'N/A';
+                distributorDetails.classList.remove('hidden');
+            } else {
+                distributorDetails.classList.add('hidden');
+            }
+        });
+
+        // 3. Toggle Ice Cream Fields (Animated)
+        sellingIceCream.addEventListener('change', function() {
+            if (this.value === 'yes') {
+                iceCreamFields.classList.add('open');
+            } else {
+                iceCreamFields.classList.remove('open');
+            }
+        });
+        // Trigger on load in case of form error reload
+        if (sellingIceCream.value === 'yes') {
+            iceCreamFields.classList.add('open');
+        }
+
+        // 4. Geolocation
+        getLocationBtn.addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                locationStatus.textContent = 'Geolocation is not supported by your browser.';
+                locationStatus.style.color = 'red';
+                return;
+            }
+            locationStatus.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Getting location...';
+            locationStatus.style.color = '#008a4c'; // brand-primary (Green)
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude.toFixed(7);
+                    const long = position.coords.longitude.toFixed(7);
+                    latitudeInput.value = lat;
+                    longitudeInput.value = long;
+                    locationStatus.innerHTML = `<i class="fa fa-check-circle text-green-600"></i> Location captured! (${lat}, ${long})`;
+                },
+                (error) => {
+                    locationStatus.innerHTML = `<i class="fa fa-times-circle text-red-600"></i> Error: ${error.message}`;
+                }
+            );
+        });
+
+        // ---
+        // 5. MODIFIED CAMERA LOGIC
+        // ---
+        function stopCurrentStream() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        async function startCameraWithMode(facingMode) {
+            stopCurrentStream(); // Stop any existing stream
+            try {
+                const constraints = {
+                    video: { facingMode: facingMode },
+                    audio: false
+                };
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                cameraContainer.classList.remove('hidden');
+                startCameraBtn.classList.add('hidden');
+                photoPreviewContainer.classList.add('hidden');
+            } catch (err) {
+                console.error("Error accessing camera with mode " + facingMode + ": ", err);
+                // If the first camera fails, don't show an alert yet, just try the other one.
+                return false;
+            }
+            return true;
+        }
+        
+        startCameraBtn.addEventListener('click', () => {
+             // Try to start with the back camera first
+            startCameraWithMode('environment').then(success => {
+                if (!success) {
+                    // If the back camera failed, try the front camera as a fallback
+                    console.log("Back camera failed, trying front camera.");
+                    currentFacingMode = 'user';
+                    startCameraWithMode('user');
+                }
+            });
+        });
+
+        switchCameraBtn.addEventListener('click', () => {
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            startCameraWithMode(currentFacingMode); // Restart the camera with the new mode
+        });
+        // --- END MODIFIED CAMERA LOGIC ---
+
+        clickPhotoBtn.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8); // 80% quality
+            photoPreview.src = dataUrl;
+            capturedPhotoInput.value = dataUrl;
+
+            photoPreviewContainer.classList.remove('hidden');
+            cameraContainer.classList.add('hidden');
+            startCameraBtn.classList.add('hidden');
+
+            stopCurrentStream();
+        });
+
+        retakePhotoBtn.addEventListener('click', () => {
+            capturedPhotoInput.value = '';
+            photoPreview.src = '';
+
+            photoPreviewContainer.classList.add('hidden');
+            startCameraBtn.classList.remove('hidden'); // Show the 'Open Camera' button again
+        });
+
+        // 6. Check Phone Number
+        let phoneCheckTimer;
+        phoneInput.addEventListener('input', () => {
+            clearTimeout(phoneCheckTimer);
+            const phone = phoneInput.value;
+            phoneCheckResult.textContent = '';
+
+            if (phone.length === 10 && /^\d{10}$/.test(phone)) {
+                phoneCheckResult.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Checking...';
+                phoneCheckResult.style.color = 'blue';
+                phoneCheckTimer = setTimeout(() => {
+                    fetch(`/api/check_phone/${phone}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.ok && data.exists) {
+                                phoneCheckResult.textContent = `Warning: Phone exists (${data.matches.join(', ')})`;
+                                phoneCheckResult.style.color = 'orange';
+                            } else if (data.ok && !data.exists) {
+                                phoneCheckResult.textContent = 'Phone number is available.';
+                                phoneCheckResult.style.color = 'green';
+                            } else {
+                                phoneCheckResult.textContent = data.message || 'Error checking phone.';
+                                phoneCheckResult.style.color = 'red';
+                            }
+                        });
+                }, 500);
+            } else if (phone.length > 0) {
+                phoneCheckResult.textContent = 'Must be 10 digits.';
+                phoneCheckResult.style.color = 'red';
+            }
+        });
+
+        // 7. Form Submission (AJAX)
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Stop the default form submission
+            
+            // --- START: Client-side validation ---
+            if (!latitudeInput.value || !longitudeInput.value) {
+                showToast('Geolocation is required. Please click "Get Current Location".', 'danger');
+                window.scrollTo(0, 0); 
+                return; // Stop submission
+            }
+
+            if (!capturedPhotoInput.value) {
+                showToast('A shop photo is required. Please use the camera.', 'danger');
+                window.scrollTo(0, 0); 
+                return; // Stop submission
+            }
+            // --- END: Client-side validation ---
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
+
+            const formData = new FormData(form);
+            
+            // Clean up form data before sending
+            if (formData.get('selling_ice_cream') !== 'yes') {
+                formData.delete('monthly_sales');
+                formData.delete('ice_cream_brands');
+                formData.delete('competitor_assets');
+                formData.delete('signage_availability');
+            }
+
+            fetch("{{ url_for('new_request') }}", {
+                method: 'POST',
+                body: formData, 
+                headers: {
+                    // Flask-WTF handles CSRF via the hidden input, 
+                    // but including the header is good practice if needed.
+                    'X-CSRFToken': formData.get('csrf_token') 
+                }
+            })
+            .then(response => {
+                // Check if the response is JSON, otherwise it's a server error
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Server returned a non-JSON response. Check server logs.");
+                }
+                return response.json(); // This will parse the JSON body
+            })
+            .then(result => {
+                if (result.success) {
+                    // Success! Redirect to the new request page.
+                    // The server flashes the success message.
+                    window.location.href = `{{ url_for('view_request', request_id=0) }}`.replace('0', result.request_id);
+                } else {
+                    // Validation errors from the server (form.errors)
+                    let errorMsg = result.message || 'An unknown error occurred.';
+                    if (result.errors) {
+                        let errorsList = [];
+                        // Create a user-friendly error list
+                        for (const field in result.errors) {
+                            let fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            errorsList.push(`<strong>${fieldName}:</strong> ${result.errors[field].join(', ')}`);
+                        }
+                        errorMsg = 'Please correct the following errors:<br>' + errorsList.join('<br>');
+                    }
+                    showToast(errorMsg, 'danger');
+                    window.scrollTo(0, 0); // Scroll to top to show error
+                }
+            })
+            .catch(err => {
+                console.error('Submit Error:', err);
+                showToast('A network error or server error occurred. Please try again. Check console for details.', 'danger');
+                window.scrollTo(0, 0);
+            })
+            .finally(() => {
+                // Re-enable the button whether it succeeded or failed
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-check mr-2"></i> Submit Request';
+            });
+        });
+    
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% macro render_field(field, description=None) %}
+  <div>
+    {{ field.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+    {{ field(class="form-input" + (" border-red-500" if field.errors else "")) }}
+    
+    {% if description %}
+      <p class="mt-1 text-xs text-gray-500">{{ description }}</p>
+    {% endif %}
+
+    {% if field.errors %}
+      {% for error in field.errors %}
+        <span class="text-xs text-red-600 font-medium">{{ error }}</span>
+      {% endfor %}
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro render_submit_field(field, class="") %}
+  <button type="submit" class="btn {{ class }}">
+    <i class="fa fa-check mr-2"></i> {{ field.label.text }}
+  </button>
+{% endmacro %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_form_helpers.html" import render_field, render_submit_field %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">{{ title }}</h1>
+    <a href="{{ url_for('manage_users') }}" class="btn btn-secondary">
+        <i class="fa fa-arrow-left mr-2"></i> Back to All Users
+    </a>
+</div>
+
+<div class="max-w-2xl mx-auto">
+    <form action="" method="POST" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-user-circle"></i>
+                User Details
+            </div>
+            <div class="card-content space-y-6">
+                {{ render_field(form.name) }}
+                {{ render_field(form.employee_code) }}
+                {{ render_field(form.email) }}
+                {{ render_field(form.role) }}
+                {{ render_field(form.so, description="Required only for 'SE' (Sales Executive) role.") }}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-lock"></i>
+                Set Password
+            </div>
+            <div class="card-content space-y-6">
+                {% if user %}
+                <p class="text-sm text-gray-600">Leave fields blank to keep the current password.</p>
+                {% endif %}
+                {{ render_field(form.password) }}
+                {{ render_field(form.confirm_password) }}
+            </div>
+        </div>
+        
+        <div class="mt-6">
+            {{ render_submit_field(form.submit, class="btn-primary w-full py-3 text-base") }}
+        </div>
+    </form>
+</div>
+{% endblock %}

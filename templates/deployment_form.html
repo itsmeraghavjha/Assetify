@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block title %}Confirm Deployment for Request #{{ request.id }}{% endblock %}
+
+{% block content %}
+<style>
+    /* These styles match your new_request.html form */
+    .card {
+        background-color: #ffffff;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+    .card-header {
+        padding: 1rem 1.5rem;
+        background-color: #fdfdfd;
+        border-bottom: 1px solid #f1f1f1;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+    }
+    .card-header i {
+        color: #008a4c;
+        margin-right: 0.75rem;
+    }
+    .card-content {
+        padding: 1.5rem;
+    }
+</style>
+
+<div class="max-w-2xl mx-auto">
+    <div class="mb-4">
+        <a href="{{ url_for('view_request', request_id=request.id) }}" class="text-sm text-brand-primary hover:text-brand-accent">
+            &larr; Back to Request Details
+        </a>
+    </div>
+
+    <form method="POST" novalidate id="deployment-form">
+        {{ form.hidden_tag() }}
+        
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-check-circle"></i>
+                Confirm Asset Deployment
+            </div>
+            <div class="card-content space-y-6">
+                <!-- Request Info -->
+                <div class="p-4 bg-gray-50 rounded-lg border text-sm">
+                    <p><strong>Request ID:</strong> #{{ request.id }}</p>
+                    <p><strong>Retailer:</strong> {{ request.retailer_name }}</p>
+                    <p><strong>Asset Model Requested:</strong> {{ request.asset_model }}</p>
+                </div>
+                
+                <!-- Form Fields -->
+                <div>
+                    <label for="deployed_make" class="block text-sm font-medium text-gray-700 mb-1">Asset Make / Manufacturer</label>
+                    {{ form.deployed_make(class="form-input", placeholder="e.g., Western, Voltas") }}
+                    {% if form.deployed_make.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ form.deployed_make.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="deployed_serial_no" class="block text-sm font-medium text-gray-700 mb-1">Asset Serial Number</label>
+                    {{ form.deployed_serial_no(class="form-input", placeholder="Enter the unique serial number") }}
+                     {% if form.deployed_serial_no.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ form.deployed_serial_no.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Photo Sections -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Photo 1 -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Photo 1 (e.g., Fridge front)</label>
+                        <button type="button" id="start-camera-1" class="btn btn-secondary w-full py-3">
+                            <i class="fa fa-camera mr-2"></i> Open Camera for Photo 1
+                        </button>
+                        <div id="photo-preview-container-1" class="mt-2 hidden">
+                            <img id="photo-preview-1" class="rounded-lg border w-full">
+                            <button type="button" id="retake-photo-1" class="mt-2 text-sm text-red-600 hover:text-red-800">Retake Photo 1</button>
+                        </div>
+                        {{ form.deployment_photo1(id="deployment_photo1", class="hidden") }}
+                         {% if form.deployment_photo1.errors %}
+                            <p class="mt-1 text-xs text-red-600">{{ form.deployment_photo1.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+                    <!-- Photo 2 -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Photo 2 (e.g., Serial number plate)</label>
+                         <button type="button" id="start-camera-2" class="btn btn-secondary w-full py-3">
+                            <i class="fa fa-camera mr-2"></i> Open Camera for Photo 2
+                        </button>
+                        <div id="photo-preview-container-2" class="mt-2 hidden">
+                            <img id="photo-preview-2" class="rounded-lg border w-full">
+                            <button type="button" id="retake-photo-2" class="mt-2 text-sm text-red-600 hover:text-red-800">Retake Photo 2</button>
+                        </div>
+                        {{ form.deployment_photo2(id="deployment_photo2", class="hidden") }}
+                         {% if form.deployment_photo2.errors %}
+                            <p class="mt-1 text-xs text-red-600">{{ form.deployment_photo2.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="pt-4 border-t">
+                    {{ form.submit(class="w-full btn btn-main-action py-3 text-base") }}
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Camera Modal -->
+<div id="camera-modal" class="fixed inset-0 bg-black bg-opacity-75 flex-col items-center justify-center z-50 p-4 hidden">
+    <div class="bg-white rounded-lg p-4 w-full max-w-lg">
+        <video id="video" autoplay playsinline class="w-full h-auto rounded-lg bg-gray-900"></video>
+        <div class="mt-2 grid grid-cols-2 gap-2">
+            <button type="button" id="capture-btn" class="w-full mt-2 btn btn-primary py-3">Capture</button>
+            <button type="button" id="switch-camera-btn" class="w-full mt-2 btn btn-secondary py-3"><i class="fa fa-sync-alt mr-2"></i> Switch</button>
+        </div>
+        <button type="button" id="close-camera-btn" class="w-full mt-2 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Close</button>
+    </div>
+</div>
+<canvas id="canvas" class="hidden"></canvas> <!-- Canvas for capturing frame -->
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Camera Elements ---
+    const cameraModal = document.getElementById('camera-modal');
+    const video = document.getElementById('video');
+    const captureBtn = document.getElementById('capture-btn');
+    const switchCameraBtn = document.getElementById('switch-camera-btn');
+    const closeCameraBtn = document.getElementById('close-camera-btn');
+    const canvas = document.getElementById('canvas');
+
+    // --- Photo 1 Elements ---
+    const startCamera1Btn = document.getElementById('start-camera-1');
+    const photoPreviewContainer1 = document.getElementById('photo-preview-container-1');
+    const photoPreview1 = document.getElementById('photo-preview-1');
+    const retakePhoto1Btn = document.getElementById('retake-photo-1');
+    const hiddenInput1 = document.getElementById('deployment_photo1');
+
+    // --- Photo 2 Elements ---
+    const startCamera2Btn = document.getElementById('start-camera-2');
+    const photoPreviewContainer2 = document.getElementById('photo-preview-container-2');
+    const photoPreview2 = document.getElementById('photo-preview-2');
+    const retakePhoto2Btn = document.getElementById('retake-photo-2');
+    const hiddenInput2 = document.getElementById('deployment_photo2');
+    
+    // --- State Variables ---
+    let stream = null;
+    let activeCameraFor = null; // Will be 1 or 2
+    let currentFacingMode = 'environment'; // 'environment' for back, 'user' for front
+
+    // --- Functions ---
+    function stopCurrentStream() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    }
+
+    async function startStream(facingMode) {
+        stopCurrentStream();
+        try {
+            const constraints = { video: { facingMode: facingMode } };
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = stream;
+            cameraModal.classList.remove('hidden');
+            cameraModal.classList.add('flex');
+        } catch (err) {
+            console.error("Camera Error:", err);
+            alert("Could not access the camera. Please ensure permissions are granted in your browser settings.");
+            stopCamera();
+        }
+    }
+
+    function stopCamera() {
+        stopCurrentStream();
+        cameraModal.classList.add('hidden');
+        cameraModal.classList.remove('flex');
+        activeCameraFor = null;
+    }
+
+    function takePhoto() {
+        if (!video.videoWidth) {
+            alert("Camera not ready. Please try again.");
+            return;
+        }
+
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+        if (activeCameraFor === 1) {
+            photoPreview1.src = dataUrl;
+            hiddenInput1.value = dataUrl;
+            photoPreviewContainer1.classList.remove('hidden');
+            startCamera1Btn.classList.add('hidden');
+        } else if (activeCameraFor === 2) {
+            photoPreview2.src = dataUrl;
+            hiddenInput2.value = dataUrl;
+            photoPreviewContainer2.classList.remove('hidden');
+            startCamera2Btn.classList.add('hidden');
+        }
+        stopCamera();
+    }
+
+    // --- Event Listeners ---
+    startCamera1Btn.addEventListener('click', () => {
+        activeCameraFor = 1;
+        startStream(currentFacingMode);
+    });
+
+    startCamera2Btn.addEventListener('click', () => {
+        activeCameraFor = 2;
+        startStream(currentFacingMode);
+    });
+
+    closeCameraBtn.addEventListener('click', stopCamera);
+    captureBtn.addEventListener('click', takePhoto);
+    
+    switchCameraBtn.addEventListener('click', () => {
+        currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+        startStream(currentFacingMode);
+    });
+
+    retakePhoto1Btn.addEventListener('click', () => {
+        hiddenInput1.value = '';
+        photoPreview1.src = '';
+        photoPreviewContainer1.classList.add('hidden');
+        startCamera1Btn.classList.remove('hidden');
+    });
+
+    retakePhoto2Btn.addEventListener('click', () => {
+        hiddenInput2.value = '';
+        photoPreview2.src = '';
+        photoPreviewContainer2.classList.add('hidden');
+        startCamera2Btn.classList.remove('hidden');
+    });
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Assetify{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        'brand-primary': '#008a4c', // Heritage Green
+                        'brand-accent': '#e60026', // Heritage Red
+                        'brand-light': '#f0f9f4',   // Light green background
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            font-family: 'Poppins', sans-serif; 
+        }
+
+        /* --- Button Styles (Plain CSS) --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.25rem; /* py-3, px-5 */
+            border: 1px solid transparent;
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* font-medium */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); /* shadow-sm */
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn-primary { /* This is the RED button */
+            color: #ffffff;
+            background-color: #e60026; /* brand-accent */
+        }
+        .btn-primary:hover {
+            background-color: #c4001f;
+        }
+        /* --- NEW: Green Button --- */
+        .btn-main-action {
+             color: #ffffff;
+             background-color: #008a4c; /* brand-primary */
+        }
+        .btn-main-action:hover {
+             background-color: #00723d;
+        }
+
+
+        /* --- NEW: Floating Label Form --- */
+        .form-group {
+            position: relative;
+        }
+        .form-field {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem; /* py-3, px-4 */
+            padding-top: 1.25rem; /* pt-5 to make space for label */
+            border: 1px solid #e5e7eb; /* border-gray-200 */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); /* shadow-sm */
+            transition: all 0.2s ease-in-out;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        .form-field:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            border-color: #008a4c;
+            box-shadow: 0 0 0 3px rgba(0, 138, 76, 0.2);
+        }
+        .form-label {
+            position: absolute;
+            left: 1rem; /* px-4 */
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280; /* text-gray-500 */
+            font-size: 0.875rem; /* text-sm */
+            transition: all 0.2s ease-out;
+            pointer-events: none; /* Allows clicking through the label */
+            background-color: #ffffff; /* Match card bg */
+            padding: 0 0.25rem; /* px-1 */
+        }
+        /* When the input is focused OR has text */
+        .form-field:focus + .form-label,
+        .form-field:not(:placeholder-shown) + .form-label {
+            top: -0.5rem; /* Moves up */
+            transform: translateY(0);
+            font-size: 0.75rem; /* text-xs */
+            color: #008a4c; /* brand-primary */
+        }
+        /* Keep label gray if not focused but has text */
+        .form-field:not(:focus):not(:placeholder-shown) + .form-label {
+             color: #6b7280; /* text-gray-500 */
+        }
+
+
+        /* --- Toast Notification (Plain CSS) --- */
+        .toast-container {
+            position: absolute;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 28rem; /* max-w-md */
+            padding: 1rem; /* p-4 */
+            z-index: 50;
+        }
+        .toast {
+            display: flex;
+            padding: 1rem;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            animation: slideInDown 0.5s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+        }
+        .toast.success { background-color: #f0fdf4; color: #15803d; }
+        .toast.danger { background-color: #fef2f2; color: #b91c1c; }
+        .toast .icon {
+            flex-shrink: 0;
+            font-size: 1.25rem; /* fa-lg */
+        }
+        .toast .content {
+            margin-left: 0.75rem; /* ml-3 */
+        }
+        .toast .message {
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* font-medium */
+        }
+        @keyframes slideInDown {
+    from {
+        transform: translateY(-120%); /* Changed from translate() */
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0); /* Changed from translate() */
+        opacity: 1;
+    }
+}
+    </style>
+</head>
+<body class="h-full bg-brand-light">
+    <div class="toast-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% set cat_class = 'danger' if category == 'danger' else 'success' %}
+                {% set cat_icon = 'fa-times-circle' if category == 'danger' else 'fa-check-circle' %}
+                <div class="toast {{ cat_class }}" role="alert">
+                    <div class="icon">
+                        <i class="fa {{ cat_icon }}"></i>
+                    </div>
+                    <div class="content">
+                        <p class="message">{{ message }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    </div>
+    
+    {% block content %}{% endblock %}
+
+    <script>
+        // Auto-dismiss toasts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const toasts = document.querySelectorAll('.toast');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.style.transition = 'opacity 0.5s ease';
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 500);
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>

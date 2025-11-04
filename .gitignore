@@ -1,0 +1,44 @@
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+
+# Environment variables and secrets
+.env
+*.env
+.env.*
+
+# Database files
+*.db
+*.sqlite3
+
+# Flask upload folders
+uploads/
+
+# Flask migrations (optional - comment if you want to version them)
+migrations/
+
+# Log files
+*.log
+
+# IDE / Editor settings
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Build / distribution directories
+build/
+dist/
+*.spec
+
+# Test / coverage
+.coverage
+htmlcov/
+.pytest_cache/

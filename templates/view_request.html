@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+{% block title %}Request #{{ request.id }}{% endblock %}
+
+{% block content %}
+
+<style>
+    @media print {
+        /* Hide the nav bar, footer, back link, and print button */
+        body > nav,
+        body > footer,
+        .mb-4, /* Hides 'Back to Dashboard' link */
+        #print-btn {
+            display: none !important;
+        }
+
+        /* Hide the entire 'Take Action' block at the bottom */
+        div.bg-white.p-6.rounded-lg.shadow.mt-6 {
+             display: none !important;
+        }
+
+        /* Ensure the main content takes up the full page */
+        main {
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        /* Add a title to the printout */
+        main::before {
+            content: "Assetify - Request Details #{{ request.id }}";
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        /* Remove shadows from cards for a cleaner look */
+        .bg-white.p-6.rounded-lg.shadow {
+            box-shadow: none !important;
+            border: 1px solid #e5e7eb;
+            page-break-inside: avoid; /* Try to avoid splitting cards */
+        }
+        
+        /* Ensure images print correctly */
+        img {
+            max-width: 100% !important;
+        }
+    }
+</style>
+<div class="max-w-4xl mx-auto">
+    <div class="mb-4">
+        <a href="{{ url_for('dashboard') }}" class="text-sm text-brand-primary hover:text-brand-accent">
+            &larr; Back to Dashboard
+        </a>
+    </div>
+
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Asset Request #{{ request.id }}</h1>
+            <p class="text-gray-500">
+                Submitted by: <strong>{{ request.requester.name }}</strong> on {{ request.request_date.strftime('%Y-%m-%d') }}
+            </p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="px-3 py-1 text-lg rounded-full font-medium
+                {% if request.status == 'Approved' %}bg-blue-100 text-blue-800
+                {% elif request.status == 'Deployed' %}bg-green-100 text-green-800
+                {% elif 'Rejected' in request.status %}bg-red-100 text-red-800
+                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                {{ request.status }}
+            </span>
+            <button id="print-btn" type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary">
+                <i class="fa fa-print -ml-1 mr-2 h-5 w-5 text-gray-500"></i>
+                Print
+            </button>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <div class="md:col-span-2 space-y-6">
+            
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold border-b pb-2 mb-4 text-gray-800">Retailer & Location</h3>
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                    <dt class="font-medium text-gray-600">Retailer Name:</dt>
+                    <dd class="text-gray-900">{{ request.retailer_name }}</dd>
+
+                    <dt class="font-medium text-gray-600">Retailer Contact:</dt>
+                    <dd class="text-gray-900">{{ request.retailer_contact }}</dd>
+
+                    <dt class="font-medium text-gray-600">Retailer Email:</dt>
+                    <dd class="text-gray-900">{{ request.retailer_email or 'N/A' }}</dd>
+                    
+                    <dt class="font-medium text-gray-600">Area/Town:</dt>
+                    <dd class="text-gray-900">{{ request.area_town }}</dd>
+
+                    <dt class="font-medium text-gray-600 sm:col-span-2">Address:</dt>
+                    <dd class="text-gray-900 sm:col-span-2">{{ request.retailer_address or 'N/A' }}</dd>
+
+                    <dt class="font-medium text-gray-600">Landmark:</dt>
+                    <dd class="text-gray-900">{{ request.landmark or 'N/A' }}</dd>
+                    
+                    <dt class="font-medium text-gray-600">Coordinates:</dt>
+                    <dd class="text-gray-900">{{ request.latitude or 'N/A' }}, {{ request.longitude or 'N/A' }}</dd>
+                </dl>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold border-b pb-2 mb-4 text-gray-800">Asset Requested</h3>
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                    <dt class="font-medium text-gray-600">Asset Model:</dt>
+                    <dd class="text-gray-900">{{ request.asset_model }}</dd>
+
+                    <dt class="font-medium text-gray-600">Category:</dt>
+                    <dd class="text-gray-900">{{ request.category }}</dd>
+
+                    <dt class="font-medium text-gray-600">Placement Date:</dt>
+                    <dd class="text-gray-900">{{ request.placement_date.strftime('%Y-%m-%d') }}</dd>
+                </dl>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold border-b pb-2 mb-4 text-gray-800">Sales Info</h3>
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                    <dt class="font-medium text-gray-600">Selling Ice Cream?</dt>
+                    <dd class="capitalize text-gray-900">{{ request.selling_ice_cream }}</dd>
+
+                    <dt class="font-medium text-gray-600">Willing for Signage?</dt>
+                    <dd class="text-gray-900">{{ request.willing_for_signage or 'N/A' }}</dd>
+
+                    {% if request.selling_ice_cream == 'yes' %}
+                        <dt class="font-medium text-gray-600">Monthly Sales:</dt>
+                        <dd class="text-gray-900">{{ '₹' + request.monthly_sales|string if request.monthly_sales else 'N/A' }}</dd>
+
+                        <dt class="font-medium text-gray-600">Competitor Assets?</dt>
+                        <dd class="text-gray-900">{{ request.competitor_assets or 'N/A' }}</dd>
+                        
+                        <dt class="font-medium text-gray-600">Signage Available?</dt>
+                        <dd class="text-gray-900">{{ request.signage_availability or 'N/A' }}</dd>
+
+                        <dt class="font-medium text-gray-600 sm:col-span-2">Brands Available:</dt>
+                        <dd class="text-gray-900 sm:col-span-2">{{ request.ice_cream_brands or 'N/A' }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+            
+            {% if request.status == 'Deployed' %}
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold border-b pb-2 mb-4 text-green-800">Deployment Details</h3>
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+                    <dt class="font-medium text-gray-600">Deployed By:</dt>
+                    <dd class="text-gray-900">{{ request.deployed_by.name if request.deployed_by else 'N/A' }}</dd>
+
+                    <dt class="font-medium text-gray-600">Deployment Date:</dt>
+                    <dd class="text-gray-900">{{ request.deployment_date.strftime('%Y-%m-%d %H:%M') if request.deployment_date else 'N/A' }}</dd>
+                    
+                    <dt class="font-medium text-gray-600">Asset Make:</dt>
+                    <dd class="text-gray-900">{{ request.deployed_make or 'N/A' }}</dd>
+
+                    <dt class="font-medium text-gray-600">Serial No:</dt>
+                    <dd class="text-gray-900 font-mono">{{ request.deployed_serial_no or 'N/A' }}</dd>
+
+                    <dt class="font-medium text-gray-600 sm:col-span-2">Deployment Photos:</dt>
+                    <dd class="sm:col-span-2 grid grid-cols-2 gap-4 mt-2">
+                        {% if request.deployment_photo1_filename %}
+                        <a href="{{ url_for('uploaded_file', filename=request.deployment_photo1_filename) }}" target="_blank" class="block border rounded-lg overflow-hidden hover:opacity-80 transition duration-150">
+                            <img src="{{ url_for('uploaded_file', filename=request.deployment_photo1_filename) }}" class="object-cover w-full h-32">
+                        </a>
+                        {% endif %}
+                        {% if request.deployment_photo2_filename %}
+                        <a href="{{ url_for('uploaded_file', filename=request.deployment_photo2_filename) }}" target="_blank" class="block border rounded-lg overflow-hidden hover:opacity-80 transition duration-150">
+                            <img src="{{ url_for('uploaded_file', filename=request.deployment_photo2_filename) }}" class="object-cover w-full h-32">
+                        </a>
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+            {% endif %}
+            </div>
+
+        <div class="md:col-span-1 space-y-6">
+            
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold border-b pb-2 mb-4 text-gray-800">Approval Status</h3>
+                <ul class="space-y-4">
+                    <li>
+                        <strong class="block text-gray-800">BM (ASM) Approval:</strong>
+                        {% if request.bm_approver %}
+                            <span class="text-green-700 font-medium">Approved by {{ request.bm_approver.name }}</span>
+                            <div class="text-sm text-gray-600 mt-1 pl-4 border-l-2 border-green-200">
+                                <strong>Type:</strong> {{ request.bm_approval_type }} <br>
+                                {% if request.bm_security_amount %}
+                                    <strong>Security:</strong> ₹{{ request.bm_security_amount }}
+                                {% elif request.bm_foc_justification %}
+                                    <strong>Justification:</strong> <em>&ldquo;{{ request.bm_foc_justification }}&rdquo;</em>
+                                {% endif %}
+                            </div>
+                        {% elif 'Rejected by BM' in request.status %}
+                            <span class="text-red-700 font-medium">Rejected by {{ request.bm_approver.name or 'BM' }}</span>
+                            {% if request.bm_remarks %}
+                                <p class="text-sm text-gray-600 mt-1 pl-4 border-l-2 border-red-200"><em>&ldquo;{{ request.bm_remarks }}&rdquo;</em></p>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-yellow-700 font-medium">Pending</span>
+                        {% endif %}
+                    </li>
+                    <li>
+                        <strong class="block text-gray-800">RH Approval:</strong>
+                        {% if request.rh_approver %}
+                            <span class="text-green-700 font-medium">Approved by {{ request.rh_approver.name }}</span>
+                        {% elif 'Rejected by RH' in request.status %}
+                             <span class="text-red-700 font-medium">Rejected by {{ request.rh_approver.name or 'RH' }}</span>
+                        {% else %}
+                            <span class="text-yellow-700 font-medium">Pending</span>
+                        {% endif %}
+                        {% if request.rh_remarks %}
+                            <p class="text-sm text-gray-600 mt-1 pl-4 border-l-2 border-gray-200"><em>&ldquo;{{ request.rh_remarks }}&rdquo;</em></p>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow">
+                 <h3 class="text-xl font-semibold border-b pb-2 mb-4 text-gray-800">Initial Shop Photo</h3>
+                 {% if request.photo_filename %}
+                     <a href="{{ url_for('uploaded_file', filename=request.photo_filename) }}" target="_blank">
+                         <img src="{{ url_for('uploaded_file', filename=request.photo_filename) }}" alt="Retailer Photo" class="rounded-lg w-full">
+                     </a>
+                 {% else %}
+                     <p class="text-gray-500">No initial photo uploaded.</p>
+                 {% endif %}
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold border-b pb-2 mb-4 text-gray-800">Distributor</h3>
+                <dl>
+                    <dt class="font-medium text-gray-600">Name:</dt>
+                    <dd class="mb-2 text-gray-900">{{ request.distributor.name }}</dd>
+                    
+                    <dt class="font-medium text-gray-600">BM:</dt>
+                    <dd class="mb-2 text-gray-900">{{ request.distributor.asm_bm_name }} ({{ request.distributor.bm_email }})</dd>
+                    
+                    <dt class="font-medium text-gray-600">RH:</dt>
+                    <dd class="text-gray-900">{{ request.distributor.rh_name or 'N/A' }} ({{ request.distributor.rh_email or 'N/A' }})</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow mt-6">
+        <h3 class="text-xl font-semibold border-b pb-2 mb-4 text-gray-800">Take Action</h3>
+        
+        {% if request.status == 'Approved' and (current_user.role == 'Admin' or current_user.id == request.requester_id) %}
+        <div class="text-center">
+            <p class="text-gray-600 mb-4">This request has been approved and is ready for asset deployment.</p>
+            <a href="{{ url_for('confirm_deployment', request_id=request.id) }}" class="btn btn-success py-3 px-6 text-base">
+                <i class="fa fa-check-circle mr-2"></i> Confirm Deployment
+            </a>
+        </div>
+        {% elif current_user.role == 'BM' and request.status == 'Pending BM Approval' %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form action="{{ url_for('approve_request', request_id=request.id) }}" method="POST"
+                  x-data="{ approvalType: '' }" class="p-4 border rounded-lg"
+            >
+                <div class="space-y-4">
+                    <label class="block text-sm font-medium text-gray-700">Approval Type (Required)</label>
+                    <div class="flex space-x-4">
+                        <div class="flex items-center">
+                            <input x-model="approvalType" id="type_security" name="approval_type" type="radio" value="security" class="h-4 w-4 text-brand-primary border-gray-300 focus:ring-brand-primary">
+                            <label for="type_security" class="ml-2 block text-sm text-gray-900">With Security</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input x-model="approvalType" id="type_foc" name="approval_type" type="radio" value="foc" class="h-4 w-4 text-brand-primary border-gray-300 focus:ring-brand-primary">
+                            <label for="type_foc" class="ml-2 block text-sm text-gray-900">Free of Cost (FOC)</label>
+                        </div>
+                    </div>
+                    <div x-show="approvalType === 'security'" x-transition>
+                        <label for="security_amount" class="block text-sm font-medium text-gray-700">Security Amount (₹)</label>
+                        <input type="number" name="security_amount" id="security_amount" min="1"
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-brand-primary focus:border-brand-primary">
+                    </div>
+                    <div x-show="approvalType === 'foc'" x-transition>
+                        <label for="foc_justification" class="block text-sm font-medium text-gray-700">FOC Justification (Required)</labe>
+                        <textarea name="foc_justification" id="foc_justification" rows="3"
+                                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-brand-primary focus:border-brand-primary"></textarea>
+                    </div>
+                    <button type="submit"
+                            :disabled="approvalType === ''"
+                            class="mt-2 w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-700 hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Approve & Forward to RH
+                    </button>
+                </div>
+            </form>
+            <form action="{{ url_for('reject_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
+                <div class="space-y-4">
+                    <label for="bm-reject-remarks" class="block text-sm font-medium text-gray-700">Reason for Rejection (Required)</label>
+                    <textarea name="remarks" id="bm-reject-remarks" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-brand-primary focus:border-brand-primary" required></textarea>
+                    <button type="submit" class="mt-2 w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-700 hover:bg-red-800">
+                        Reject
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        {% elif current_user.role == 'RH' and request.status == 'Pending RH Approval' %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form action="{{ url_for('approve_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
+                <div class="space-y-4">
+                    <label for="rh-approve-remarks" class="block text-sm font-medium text-gray-700">Optional Remarks (for Approval)</label>
+                    <textarea name="remarks" id="rh-approve-remarks" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-brand-primary focus:border-brand-primary"></textarea>
+                    <button type="submit" class="mt-2 w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-700 hover:bg-green-800">
+                        Final Approve
+                    </button>
+                </div>
+            </form>
+            <form action="{{ url_for('reject_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
+                <div class="space-y-4">
+                    <label for="rh-reject-remarks" class="block text-sm font-medium text-gray-700">Reason for Rejection (Required)</label>
+                    <textarea name="remarks" id="rh-reject-remarks" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-brand-primary focus:border-brand-primary" required></textarea>
+                    <button type="submit" class="mt-2 w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-700 hover:bg-red-800">
+                        Reject
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        {% elif current_user.role == 'Admin' and 'Pending' in request.status %}
+        <p class="text-sm text-gray-600 mb-4">As an Admin, you can override the current approval status.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form action="{{ url_for('approve_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
+                <div class="space-y-4">
+                    <label for="admin-approve-remarks" class="block text-sm font-medium text-gray-700">Optional Remarks (for Approval)</Cabel>
+                    <textarea name="remarks" id="admin-approve-remarks" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-brand-primary focus:border-brand-primary"></textarea>
+                    <button type="submit" class="mt-2 w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-700 hover:bg-green-800">
+                        Admin Override: APPROVE
+                    </button>
+                </div>
+            </form>
+            <form action="{{ url_for('reject_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
+                <div class="space-y-4">
+                    <label for="admin-reject-remarks" class="block text-sm font-medium text-gray-700">Reason for Rejection (Required)</label>
+                    <textarea name="remarks" id="admin-reject-remarks" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-brand-primary focus:border-brand-primary" required></textarea>
+                    <button type="submit" class="mt-2 w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-700 hover:bg-red-800">
+                        Admin Override: REJECT
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        {% else %}
+            <p class="text-gray-600 text-sm">
+                {% if request.status == 'Deployed' %}
+                    This request has been successfully deployed and is closed.
+                {% elif current_user.role == 'SE' and request.status != 'Approved' %}
+                    This request is currently with management for review.
+                {% else %}
+                    No actions are available at this time.
+                {% endif %}
+            </p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- THIS IS THE JAVASCRIPT FOR THE PRINT BUTTON ---
+    const printBtn = document.getElementById('print-btn');
+    if (printBtn) {
+        printBtn.addEventListener('click', function() {
+            window.print(); // Triggers the browser's print dialog
+        });
+    }
+
+    // This checks for Alpine.js, which your approval form uses
+    // You might need to load Alpine.js in your base.html
+    if (typeof Alpine === 'undefined') {
+        console.warn('Alpine.js not loaded. BM approval form UI might not work as expected.');
+        // Add a simple fallback for non-Alpine users
+        try {
+            document.querySelector('input[name="approval_type"][value="security"]').addEventListener('change', function() {
+                document.querySelector('div[x-show="approvalType === \'security\'"]').style.display = 'block';
+                document.querySelector('div[x-show="approvalType === \'foc\'"]').style.display = 'none';
+            });
+            document.querySelector('input[name="approval_type"][value="foc"]').addEventListener('change', function() {
+                document.querySelector('div[x-show="approvalType === \'security\'"]').style.display = 'none';
+                document.querySelector('div[x-show="approvalType === \'foc\'"]').style.display = 'block';
+            });
+        } catch(e) {}
+    }
+});
+</script>
+{% endblock %}

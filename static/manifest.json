@@ -1,0 +1,42 @@
+{
+    "name": "Heritage Assetify",
+    "short_name": "Assetify",
+    "description": "An application for managing asset requests for Heritage Foods.",
+    "start_url": "/login",
+    "display": "standalone",
+    "background_color": "#f0f9f4",
+    "theme_color": "#008a4c",
+    "icons": [
+         {
+            "src": "/static/images/icon-192.jpg",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/static/images/icon-512.jpg",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/static/images/screenshot-mobile.jpg",
+            "sizes": "540x720",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Login Screen"
+        },
+        {
+            "src": "/static/images/screenshot-desktop.jpg",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Dashboard View"
+        }
+    ]
+}
+
+
+
+
+
