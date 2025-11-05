@@ -609,18 +609,34 @@ def export_excel():
     ws.title = "DMS Export"
 
     headers = [
+        # --- Original DMS Headers ---
         "Customer Category", "Customer Name", "Customer Code", "Customer Type",
         "Customer Address", "Region", "Sales Office", "pincode",
         "Territory/Cluster", "Contact No 1", "Contact No 2", "Contact No 3",
         "Email Id 1", "Email Id 2", "Primary Contact Person", "Secondary Contact Person",
         "Parent Customer Code", "GST No", "GST State Code", "PAN",
-        "Rate Code", "Discount Code", "Remarks", "FSSAI", "BEAT Name"
+        "Rate Code", "Discount Code", "Remarks", "FSSAI", "BEAT Name",
+        
+        # --- NEW TRACKING HEADERS ---
+        "Request ID",
+        "Request Date",
+        "Request Status",
+        "SE (Requester)",
+        "Distributor Name",
+        "BM Approver",
+        "BM Approval Type",
+        "BM Security Amount",
+        "BM FOC Justification",
+        "RH Approver",
+        "Deployed By",
+        "Deployment Date"
     ]
     ws.append(headers)
 
     for req in requests_to_export:
         full_address = f"{req.retailer_address or ''} {req.landmark or ''}".strip()
         row = [
+            # --- Original DMS Data ---
             req.category,
             req.retailer_name,
             req.id,
@@ -638,7 +654,21 @@ def export_excel():
             req.distributor.code if req.distributor else "",
             "", "", "", 
             "", "", 
-            "", "", "" 
+            "", "", "" ,
+            
+            # --- NEW TRACKING DATA ---
+            f"#{req.id}",
+            req.request_date.strftime('%Y-%m-%d') if req.request_date else "N/A",
+            req.status,
+            req.requester.name if req.requester else "N/A",
+            req.distributor.name if req.distributor else "N/A",
+            req.bm_approver.name if req.bm_approver else "N/A",
+            req.bm_approval_type if req.bm_approval_type else "N/A",
+            req.bm_security_amount if req.bm_security_amount else "N/A",
+            req.bm_foc_justification if req.bm_foc_justification else "N/A",
+            req.rh_approver.name if req.rh_approver else "N/A",
+            req.deployed_by.name if req.deployed_by else "N/A",
+            req.deployment_date.strftime('%Y-%m-%d') if req.deployment_date else "N/A"
         ]
         ws.append(row)
 
