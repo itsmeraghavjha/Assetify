@@ -1,0 +1,37 @@
+{#
+This is a reusable pagination component.
+It requires two variables to be passed in:
+- pagination: The pagination object from Flask-SQLAlchemy
+- base_url: The base URL for the page (which already contains filter/sort args)
+#}
+{% if pagination.pages > 1 %}
+<div class="mt-6 border-t border-gray-200 pt-5">
+    <nav class="flex items-center justify-between">
+        <div class="text-sm text-gray-600">
+            Showing <span class="font-medium">{{ pagination.items|length }}</span> of
+            <span class="font-medium">{{ pagination.total }}</span> Results
+        </div>
+        <div class="flex-1 flex justify-end">
+            {% if pagination.has_prev %}
+                <a href="{{ base_url }}&page={{ pagination.prev_num }}" class="btn btn-secondary !py-2 !px-3">
+                    <i class="fa fa-chevron-left mr-2"></i> Previous
+                </a>
+            {% else %}
+                <span class="btn btn-secondary !py-2 !px-3 opacity-50 cursor-not-allowed">
+                    <i class="fa fa-chevron-left mr-2"></i> Previous
+                </span>
+            {% endif %}
+
+            {% if pagination.has_next %}
+                <a href="{{ base_url }}&page={{ pagination.next_num }}" class="btn btn-secondary !py-2 !px-3 ml-3">
+                    Next <i class="fa fa-chevron-right ml-2"></i>
+                </a>
+            {% else %}
+                <span class="btn btn-secondary !py-2 !px-3 ml-3 opacity-50 cursor-not-allowed">
+                    Next <i class="fa fa-chevron-right ml-2"></i>
+                </span>
+            {% endif %}
+        </div>
+    </nav>
+</div>
+{% endif %}

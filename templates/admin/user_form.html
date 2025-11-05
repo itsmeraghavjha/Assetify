@@ -24,6 +24,10 @@
                 {{ render_field(form.email) }}
                 {{ render_field(form.role) }}
                 {{ render_field(form.so, description="Required only for 'SE' (Sales Executive) role.") }}
+                
+                <div id="distributor-select" class="hidden">
+                    {{ render_field(form.distributor_id, description="Only applies if Role is 'Distributor'.") }}
+                </div>
             </div>
         </div>
 
@@ -46,4 +50,24 @@
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Simple script to show/hide the distributor dropdown based on the selected role
+    document.addEventListener('DOMContentLoaded', function() {
+        const roleSelect = document.getElementById('role');
+        const distributorSelect = document.getElementById('distributor-select');
+
+        function toggleDistributorField() {
+            if (roleSelect.value === 'DB') {
+                distributorSelect.classList.remove('hidden');
+            } else {
+                distributorSelect.classList.add('hidden');
+            }
+        }
+        toggleDistributorField();
+        roleSelect.addEventListener('change', toggleDistributorField);
+    });
+</script>
 {% endblock %}

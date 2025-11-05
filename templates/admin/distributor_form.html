@@ -1,17 +1,27 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
 
-{% macro render_field(field) %}
-    <div> {# Changed mb-4 to be within the div #}
-        {{ field.label(class="block text-sm font-medium text-gray-700 mb-1") }}
-        {# Apply specific class based on field type for styling #}
-        {{ field(class="form-input" if field.type not in ['SelectField'] else "form-select") }}
-        {% if field.errors %}
-            {% for error in field.errors %}
-                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-            {% endfor %}
-        {% endif %}
-    </div>
+{# This macro handles rendering our new SelectFields correctly #}
+{% macro render_field(field, description=None) %}
+  <div>
+    {{ field.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+    
+    {% if field.type == 'SelectField' %}
+        {{ field(class="form-select" + (" border-red-500" if field.errors else "")) }}
+    {% else %}
+        {{ field(class="form-input" + (" border-red-500" if field.errors else "")) }}
+    {% endif %}
+    
+    {% if description %}
+      <p class="mt-1 text-xs text-gray-500">{{ description }}</p>
+    {% endif %}
+
+    {% if field.errors %}
+      {% for error in field.errors %}
+        <span class="text-xs text-red-600 font-medium">{{ error }}</span>
+      {% endfor %}
+    {% endif %}
+  </div>
 {% endmacro %}
 
 {% block content %}
@@ -32,17 +42,11 @@
             
             <hr class="my-6 border-gray-200">
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {{ render_field(form.asm_bm_name) }}
-                {{ render_field(form.bm_email) }}
-                {{ render_field(form.rh_name) }}
-                {{ render_field(form.rh_email) }}
-            </div>
-
-            <hr class="my-6 border-gray-200">
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6"> {# Put in grid for consistency #}
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Manager Assignments</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {{ render_field(form.se_id) }}
+                {{ render_field(form.bm_id) }}
+                {{ render_field(form.rh_id) }}
             </div>
 
             <div class="mt-8 flex justify-end space-x-3">

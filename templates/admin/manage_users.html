@@ -33,82 +33,59 @@
 <div class="card">
     <div class="overflow-x-auto">
         
-        {% set base_url = url_for('manage_users', search=current_search) %}
+        {% set base_url = url_for('manage_users', 
+                                search=current_search,
+                                sort_by=current_sort,
+                                order_by=current_order) %}
         
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr class="text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    
                     {% set sort_key = 'name' %}
                     {% set next_order = 'desc' if (current_sort == sort_key and current_order == 'asc') else 'asc' %}
                     <th class="px-6 py-3">
                         <a href="{{ base_url }}&sort_by={{ sort_key }}&order_by={{ next_order }}" class="flex items-center group">
                             Name
-                            {% if current_sort == sort_key %}
-                                <i class="fa {{ 'fa-sort-up' if current_order == 'asc' else 'fa-sort-down' }} ml-1"></i>
-                            {% else %}
-                                <i class="fa fa-sort ml-1 text-gray-300 group-hover:text-gray-500"></i>
-                            {% endif %}
+                            {% if current_sort == sort_key %}<i class="fa {{ 'fa-sort-up' if current_order == 'asc' else 'fa-sort-down' }} ml-1"></i>{% else %}<i class="fa fa-sort ml-1 text-gray-300 group-hover:text-gray-500"></i>{% endif %}
                         </a>
                     </th>
-                    
                     {% set sort_key = 'code' %}
                     {% set next_order = 'desc' if (current_sort == sort_key and current_order == 'asc') else 'asc' %}
                     <th class="px-6 py-3">
                         <a href="{{ base_url }}&sort_by={{ sort_key }}&order_by={{ next_order }}" class="flex items-center group">
                             Employee Code
-                            {% if current_sort == sort_key %}
-                                <i class="fa {{ 'fa-sort-up' if current_order == 'asc' else 'fa-sort-down' }} ml-1"></i>
-                            {% else %}
-                                <i class="fa fa-sort ml-1 text-gray-300 group-hover:text-gray-500"></i>
-                            {% endif %}
+                            {% if current_sort == sort_key %}<i class="fa {{ 'fa-sort-up' if current_order == 'asc' else 'fa-sort-down' }} ml-1"></i>{% else %}<i class="fa fa-sort ml-1 text-gray-300 group-hover:text-gray-500"></i>{% endif %}
                         </a>
                     </th>
-                    
                     {% set sort_key = 'email' %}
                     {% set next_order = 'desc' if (current_sort == sort_key and current_order == 'asc') else 'asc' %}
                     <th class="px-6 py-3">
                         <a href="{{ base_url }}&sort_by={{ sort_key }}&order_by={{ next_order }}" class="flex items-center group">
                             Email
-                            {% if current_sort == sort_key %}
-                                <i class="fa {{ 'fa-sort-up' if current_order == 'asc' else 'fa-sort-down' }} ml-1"></i>
-                            {% else %}
-                                <i class="fa fa-sort ml-1 text-gray-300 group-hover:text-gray-500"></i>
-                            {% endif %}
+                            {% if current_sort == sort_key %}<i class="fa {{ 'fa-sort-up' if current_order == 'asc' else 'fa-sort-down' }} ml-1"></i>{% else %}<i class="fa fa-sort ml-1 text-gray-300 group-hover:text-gray-500"></i>{% endif %}
                         </a>
                     </th>
-
                     {% set sort_key = 'role' %}
                     {% set next_order = 'desc' if (current_sort == sort_key and current_order == 'asc') else 'asc' %}
                     <th class="px-6 py-3">
                         <a href="{{ base_url }}&sort_by={{ sort_key }}&order_by={{ next_order }}" class="flex items-center group">
                             Role
-                            {% if current_sort == sort_key %}
-                                <i class="fa {{ 'fa-sort-up' if current_order == 'asc' else 'fa-sort-down' }} ml-1"></i>
-                            {% else %}
-                                <i class="fa fa-sort ml-1 text-gray-300 group-hover:text-gray-500"></i>
-                            {% endif %}
+                            {% if current_sort == sort_key %}<i class="fa {{ 'fa-sort-up' if current_order == 'asc' else 'fa-sort-down' }} ml-1"></i>{% else %}<i class="fa fa-sort ml-1 text-gray-300 group-hover:text-gray-500"></i>{% endif %}
                         </a>
                     </th>
-                    
                     {% set sort_key = 'so' %}
                     {% set next_order = 'desc' if (current_sort == sort_key and current_order == 'asc') else 'asc' %}
                     <th class="px-6 py-3">
                         <a href="{{ base_url }}&sort_by={{ sort_key }}&order_by={{ next_order }}" class="flex items-center group">
                             SO
-                            {% if current_sort == sort_key %}
-                                <i class="fa {{ 'fa-sort-up' if current_order == 'asc' else 'fa-sort-down' }} ml-1"></i>
-                            {% else %}
-                                <i class="fa fa-sort ml-1 text-gray-300 group-hover:text-gray-500"></i>
-                            {% endif %}
+                            {% if current_sort == sort_key %}<i class="fa {{ 'fa-sort-up' if current_order == 'asc' else 'fa-sort-down' }} ml-1"></i>{% else %}<i class="fa fa-sort ml-1 text-gray-300 group-hover:text-gray-500"></i>{% endif %}
                         </a>
                     </th>
-                    
                     <th class="px-6 py-3 text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-                {% for user in users %}
+                {% for user in pagination.items %}
                 <tr class="hover:bg-brand-light transition-colors duration-150">
                     <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ user.name }}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">{{ user.employee_code }}</td>
@@ -125,16 +102,22 @@
                         {% endif %}
                     </td>
                 </tr>
-                {% else %}
+                {% endfor %}
+
+                {% if not pagination.items %}
                 <tr>
                     <td colspan="6" class="text-center py-16 text-gray-500">
                         <i class="fa fa-users fa-3x mb-3"></i>
                         <p>No users found{% if current_search %} matching your search{% endif %}.</p>
                     </td>
                 </tr>
-                {% endfor %}
+                {% endif %}
             </tbody>
         </table>
     </div>
-</div>
+
+    <div class="card-content border-t border-gray-100">
+        {% include '_pagination.html' %}
+    </div>
+    </div>
 {% endblock %}
