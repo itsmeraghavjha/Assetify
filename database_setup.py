@@ -1,17 +1,18 @@
 import os
 import re
-import openpyxl  # Uses the Excel library
+import openpyxl  # <-- THIS IS THE FIX: Use Excel reader
 from app import app, db
 from models import User, Distributor, AssetRequest
 
 # --- CONFIGURATION ---
-EXCEL_FILE_PATH = 'DB vs EMP Mapping.xlsx'
-SHEET_NAME = 'DB wise - SE Mapping'
+# --- THIS IS THE FIX: Point to your .xlsx file ---
+EXCEL_FILE_PATH = 'DB vs EMP Mapping (1).xlsx'
+SHEET_NAME = 'DB wise - SE Mapping' # Assuming this is the sheet name
+# --- END OF FIX ---
 
-# --- YOUR PASSWORD RULES ---
-BM_RH_PASSWORD = 'hfl@1234'
-ADMIN_PASSWORD = 'adminpass'
-# SE and DB passwords will be set from the file data
+# --- PASSWORD RULES ---
+ADMIN_PASSWORD = 'adminpass' # A default password for the main admin account
+
 
 def load_data_from_excel(file_path, sheet_name):
     """
@@ -23,7 +24,7 @@ def load_data_from_excel(file_path, sheet_name):
     except FileNotFoundError:
         print(f"--- ERROR ---")
         print(f"File not found: {file_path}")
-        print("Please make sure the file is in the same directory as this script.")
+        print(f"Please make sure the file '{file_path}' is in the same directory as this script.")
         return None
     except Exception as e:
         print(f"--- ERROR Reading Excel File ---")
@@ -39,7 +40,10 @@ def load_data_from_excel(file_path, sheet_name):
         return None
 
     rows = []
+    # Read headers from the first row
     headers = [str(cell.value).strip() for cell in sheet[1]]
+    
+    # Read data from all subsequent rows
     for row in sheet.iter_rows(min_row=2):
         row_data = {}
         for header, cell in zip(headers, row):
@@ -52,10 +56,12 @@ def load_data_from_excel(file_path, sheet_name):
 def setup_database():
     """
     Clears and seeds the database from the provided Excel file.
-    Run this script ONCE after 'flask db upgrade' to set up a clean database.
     """
     
+    # --- THIS IS THE FIX: Call the new Excel function ---
     rows = load_data_from_excel(EXCEL_FILE_PATH, SHEET_NAME)
+    # --- END OF FIX ---
+    
     if rows is None:
         return 
 
@@ -64,14 +70,17 @@ def setup_database():
         try:
             print("Clearing existing data...")
             db.session.query(AssetRequest).delete()
+            
             for user in User.query.all():
                 user.distributor_id = None
             db.session.commit()
+            
             for dist in Distributor.query.all():
                 dist.se_id = None
                 dist.bm_id = None
                 dist.rh_id = None
             db.session.commit()
+            
             db.session.query(User).delete()
             db.session.query(Distributor).delete()
             db.session.commit()
@@ -101,47 +110,41 @@ def setup_database():
                         'email': None, 
                         'role': 'SE',
                         'so': row.get('SO', '').strip(),
-                        'password': se_code # YOUR RULE: SE Pass = SE Emp Code
+                        'password': se_code # Rule: SE Pass = SE Emp Code
                     }
                 
-                bm_email = row.get('BM Mail ID', '').strip().lower()
-                if bm_email and bm_email not in unique_bms:
-                    unique_bms[bm_email] = {
-                        # --- THIS IS THE FIX ---
-                        'code': bm_email, # Use the FULL EMAIL as the Employee Code
-                        # --- END OF FIX ---
+                bm_code = row.get('BM Emp Code', '').strip()
+                if bm_code and bm_code not in unique_bms:
+                    unique_bms[bm_code] = {
+                        'code': bm_code, 
+                        'password': bm_code, # Rule: BM Pass = BM Emp Code
                         'name': row.get('BM', '').strip(),
-                        'email': bm_email,
-                        'role': 'BM',
-                        'so': None,
-                        'password': BM_RH_PASSWORD # YOUR RULE: Pass = hfl@1234
+                        'email': row.get('BM Mail ID', '').strip().lower(),
+                        'role': 'BM'
                     }
                     
-                rh_email = row.get('RH Mail ID', '').strip().lower()
-                if rh_email and rh_email not in unique_rhs:
-                    unique_rhs[rh_email] = {
-                        # --- THIS IS THE FIX ---
-                        'code': rh_email, # Use the FULL EMAIL as the Employee Code
-                        # --- END OF FIX ---
+                rh_code = row.get('RH Emp Code', '').strip()
+                if rh_code and rh_code not in unique_rhs:
+                    unique_rhs[rh_code] = {
+                        'code': rh_code, 
+                        'password': rh_code, # Rule: RH Pass = RH Emp Code
                         'name': row.get('RH', '').strip(),
-                        'email': rh_email,
-                        'role': 'RH',
-                        'so': None,
-                        'password': BM_RH_PASSWORD # YOUR RULE: Pass = hfl@1234
+                        'email': row.get('RH Mail ID', '').strip().lower(),
+                        'role': 'RH'
                     }
-
-            user_map_by_email = {}
-            user_map_by_emp_code = {}
+            
+            user_map_by_emp_code = {} 
             all_users_to_create = []
 
             admin_user = User(
-                employee_code='ADMIN01',
+                employee_code='admin', 
                 name='Admin User',
                 email='admin@example.com',
                 role='Admin'
             )
             admin_user.set_password(ADMIN_PASSWORD)
             all_users_to_create.append(admin_user)
+            user_map_by_emp_code[admin_user.employee_code] = admin_user
             
             # Process SEs
             for code, data in unique_ses.items():
@@ -158,40 +161,34 @@ def setup_database():
                 user_map_by_emp_code[code] = user
 
             # Process BMs
-            for email, data in unique_bms.items():
-                if email in user_map_by_email: continue
-                emp_code = data['code'] # This is now the full email
-                if emp_code in user_map_by_emp_code: 
-                    emp_code = f"{emp_code}_bm"
-                    
+            for code, data in unique_bms.items():
+                if code in user_map_by_emp_code:
+                    print(f"  [WARN] User code {code} (BM) already exists. Skipping.")
+                    continue
                 user = User(
-                    employee_code=emp_code,
+                    employee_code=code,
                     name=data['name'],
                     email=data['email'],
                     role=data['role']
                 )
                 user.set_password(data['password'])
                 all_users_to_create.append(user)
-                user_map_by_email[email] = user
-                user_map_by_emp_code[emp_code] = user
+                user_map_by_emp_code[code] = user
                 
             # Process RHs
-            for email, data in unique_rhs.items():
-                if email in user_map_by_email: continue
-                emp_code = data['code'] # This is now the full email
-                if emp_code in user_map_by_emp_code: 
-                    emp_code = f"{emp_code}_rh"
-                    
+            for code, data in unique_rhs.items():
+                if code in user_map_by_emp_code:
+                    print(f"  [WARN] User code {code} (RH) already exists. Skipping.")
+                    continue
                 user = User(
-                    employee_code=emp_code,
+                    employee_code=code,
                     name=data['name'],
                     email=data['email'],
                     role=data['role']
                 )
                 user.set_password(data['password'])
                 all_users_to_create.append(user)
-                user_map_by_email[email] = user
-                user_map_by_emp_code[emp_code] = user
+                user_map_by_emp_code[code] = user
 
             db.session.add_all(all_users_to_create)
             db.session.commit()
@@ -210,8 +207,6 @@ def setup_database():
         try:
             distributors_to_create = {}
             db_users_to_create = []
-            
-            # --- FIX: Track names we have already added ---
             unique_dist_names = set()
 
             for row in rows:
@@ -221,18 +216,17 @@ def setup_database():
                 if not dist_code or dist_code == 'None' or dist_code in distributors_to_create:
                     continue 
                 
-                # --- FIX: Check if we've already added this name ---
                 if dist_name in unique_dist_names:
                     print(f"  [WARN] Distributor name '{dist_name}' (Code: {dist_code}) already exists. Skipping duplicate name.")
-                    continue # Skip this duplicate name
+                    continue 
                 
                 se_code = row.get('SE Emp Code', '').strip()
                 if (se_code == '0' or not se_code or se_code == 'None'):
                     se_code = "vacant_" + re.sub(r'[^a-zA-Z0-9]', '_', row.get('SE Name', '')).lower()
-                
                 se_user = user_map_by_emp_code.get(se_code)
-                bm_user = user_map_by_email.get(row.get('BM Mail ID', '').strip().lower())
-                rh_user = user_map_by_email.get(row.get('RH Mail ID', '').strip().lower())
+                
+                bm_user = user_map_by_emp_code.get(row.get('BM Emp Code', '').strip())
+                rh_user = user_map_by_emp_code.get(row.get('RH Emp Code', '').strip())
 
                 dist = Distributor(
                     code=dist_code,
@@ -244,7 +238,7 @@ def setup_database():
                     rh_id=rh_user.id if rh_user else None
                 )
                 distributors_to_create[dist_code] = dist
-                unique_dist_names.add(dist_name) # Add the name to our tracker
+                unique_dist_names.add(dist_name) 
                 db.session.add(dist)
 
             db.session.commit()
@@ -257,13 +251,13 @@ def setup_database():
                     continue
 
                 db_user = User(
-                    employee_code=dist_code, # YOUR RULE: DB Login = Dist Code
+                    employee_code=dist_code, # Rule: DB Login = Dist Code
                     name=f"{dist_obj.name} (DB)",
                     role='DB',
                     email=None,
                     distributor_id=dist_obj.id
                 )
-                db_user.set_password(dist_code) # YOUR RULE: DB Pass = Dist Code
+                db_user.set_password(dist_code) # Rule: DB Pass = Dist Code
                 db_users_to_create.append(db_user)
                 user_map_by_emp_code[dist_code] = db_user
             
@@ -271,42 +265,126 @@ def setup_database():
             db.session.commit()
             print(f"Successfully created {len(db_users_to_create)} Distributor (DB) user accounts.")
             
-            print("\n" + "="*60)
-            print("DATABASE SEEDED SUCCESSFULLY WITH REAL DATA!")
-            print("="*60)
-            print("\n--- LOGIN CREDENTIALS ---")
-            print("\nADMIN:")
-            print(f"  User: ADMIN01 / Pass: {ADMIN_PASSWORD}")
-            
-            print("\nBRANCH MANAGERS (BMs):")
-            print(f"  (Employee Code is their FULL EMAIL) / Pass: {BM_RH_PASSWORD}")
-            for email, data in unique_bms.items(): 
-                print(f"  - {data['code']}  ({data['name']})")
-
-            print("\nREGIONAL HEADS (RHs):")
-            print(f"  (Employee Code is their FULL EMAIL) / Pass: {BM_RH_PASSWORD}")
-            for email, data in unique_rhs.items(): 
-                print(f"  - {data['code']}  ({data['name']})")
-
-            print("\nSALES EXECUTIVES (SEs):")
-            print("  (Employee Code is Password)")
-            for code, data in unique_ses.items(): 
-                print(f"  - {code} ({data['name']})")
-
-            print("\nDISTRIBUTORS (DBs):")
-            print("  (Distributor Code is Employee Code AND Password)")
-            for code, data in distributors_to_create.items(): 
-                if code not in unique_ses:
-                    print(f"  - {code} ({data.name})")
-            
-            print("="*60)
-
         except Exception as e:
             db.session.rollback()
             print(f"--- ERROR Creating Distributors or DB Users ---")
             print(f"An error occurred: {e}")
             import traceback
             traceback.print_exc()
+            return
+
+        # --- STAGE 4: Create Test Users ---
+        print("Creating test users...")
+        try:
+            test_users = []
+            test_distributors = []
+
+            # Test Admins
+            test_admin_1 = User(employee_code='testadmin1', name='Test Admin 1', role='Admin', email='admin1@test.com')
+            test_admin_1.set_password('testadmin1')
+            test_admin_2 = User(employee_code='testadmin2', name='Test Admin 2', role='Admin', email='admin2@test.com')
+            test_admin_2.set_password('testadmin2')
+            test_users.extend([test_admin_1, test_admin_2])
+
+            # Test SEs
+            test_se_1 = User(employee_code='testse1', name='Test SE 1', role='SE', so='TEST-SO')
+            test_se_1.set_password('testse1')
+            test_se_2 = User(employee_code='testse2', name='Test SE 2', role='SE', so='TEST-SO')
+            test_se_2.set_password('testse2')
+            test_users.extend([test_se_1, test_se_2])
+
+            # Test BMs
+            test_bm_1 = User(employee_code='testbm1', name='Test BM 1', role='BM', email='bm1@test.com')
+            test_bm_1.set_password('testbm1')
+            test_bm_2 = User(employee_code='testbm2', name='Test BM 2', role='BM', email='bm2@test.com')
+            test_bm_2.set_password('testbm2')
+            test_users.extend([test_bm_1, test_bm_2])
+
+            # Test RHs
+            test_rh_1 = User(employee_code='testrh1', name='Test RH 1', role='RH', email='rh1@test.com')
+            test_rh_1.set_password('testrh1')
+            test_rh_2 = User(employee_code='testrh2', name='Test RH 2', role='RH', email='rh2@test.com')
+            test_rh_2.set_password('testrh2')
+            test_users.extend([test_rh_1, test_rh_2])
+            
+            db.session.add_all(test_users)
+            db.session.commit() # Commit users first to get IDs
+
+            # Test Distributors (linked to test managers)
+            test_dist_1 = Distributor(code='TESTDIST1', name='Test Distributor 1', city='Test City', se_id=test_se_1.id, bm_id=test_bm_1.id, rh_id=test_rh_1.id)
+            test_dist_2 = Distributor(code='TESTDIST2', name='Test Distributor 2', city='Test City', se_id=test_se_2.id, bm_id=test_bm_2.id, rh_id=test_rh_2.id)
+            test_distributors.extend([test_dist_1, test_dist_2])
+            
+            db.session.add_all(test_distributors)
+            db.session.commit() # Commit distributors to get IDs
+
+            # Test DB Users (linked to test distributors)
+            test_db_1 = User(employee_code='testdb1', name='Test DB User 1', role='DB', distributor_id=test_dist_1.id)
+            test_db_1.set_password('testdb1')
+            test_db_2 = User(employee_code='testdb2', name='Test DB User 2', role='DB', distributor_id=test_dist_2.id)
+            test_db_2.set_password('testdb2')
+
+            db.session.add_all([test_db_1, test_db_2])
+            db.session.commit()
+            
+            print(f"Successfully created {len(test_users) + 2} test users and {len(test_distributors)} test distributors.")
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"--- ERROR Creating Test Users ---")
+            print(f"An error occurred: {e}")
+            import traceback
+            traceback.print_exc()
+
+        # --- STAGE 5: Final Summary ---
+        print("\n" + "="*60)
+        print("DATABASE SEEDED SUCCESSFULLY WITH REAL & TEST DATA!")
+        print("="*60)
+        print("\n--- REAL DATA LOGIN CREDENTIALS ---")
+        print("\nADMIN:")
+        print(f"  User: admin / Pass: {ADMIN_PASSWORD}")
+        
+        print("\nBRANCH MANAGERS (BMs):")
+        print("  (Employee Code is Password)")
+        for code, data in unique_bms.items(): 
+            print(f"  - {code} ({data['name']})")
+
+        print("\nREGIONAL HEADS (RHs):")
+        print("  (Employee Code is Password)")
+        for code, data in unique_rhs.items(): 
+            print(f"  - {code} ({data['name']})")
+
+        print("\nSALES EXECUTIVES (SEs):")
+        print("  (Employee Code is Password)")
+        for code, data in unique_ses.items(): 
+            print(f"  - {code} ({data['name']})")
+
+        print("\nDISTRIBUTORS (DBs):")
+        print("  (Distributor Code is Employee Code AND Password)")
+        for code, data in distributors_to_create.items(): 
+            if code not in unique_ses:
+                print(f"  - {code} ({data.name})")
+        
+        print("\n" + "="*60)
+        print("\n--- TEST USER LOGIN CREDENTIALS ---")
+        print("  (Username is Password for all test accounts)")
+        print("\n  TEST ADMINS:")
+        print("  - testadmin1 / testadmin1")
+        print("  - testadmin2 / testadmin2")
+        print("\n  TEST SEs:")
+        print("  - testse1 / testse1")
+        print("  - testse2 / testse2")
+        print("\n  TEST BMs:")
+        print("  - testbm1 / testbm1")
+        print("  - testbm2 / testbm2")
+        print("\n  TEST RHs:")
+        print("  - testrh1 / testrh1")
+        print("  - testrh2 / testrh2")
+        print("\n  TEST DBs (Linked to Test Distributors):")
+        print("  - testdb1 / testdb1")
+        print("  - testdb2 / testdb2")
+        
+        print("="*60)
 
 if __name__ == '__main__':
     setup_database()

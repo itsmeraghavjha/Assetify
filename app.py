@@ -281,7 +281,7 @@ def dashboard():
 
 @app.route('/new_request', methods=['GET', 'POST'])
 @login_required
-@role_required('SE', 'Admin', 'DB', 'BM', 'RH')
+@role_required('SE', 'Admin', 'DB')
 def new_request():
     """Create new asset request"""
     form = AssetRequestForm()

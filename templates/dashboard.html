@@ -5,7 +5,7 @@
 <div class="page-content w-full">
     <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
         <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
-        {% if current_user.role in ['SE', 'Admin', 'DB', 'BM', 'RH'] %}
+        {% if current_user.role in ['SE', 'Admin', 'DB'] %}
         <a href="{{ url_for('new_request') }}" class="btn btn-main-action shadow-lg hidden md:inline-flex">
             <i class="fa fa-plus-circle mr-2"></i> New Asset Request
         </a>
