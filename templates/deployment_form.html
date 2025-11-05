@@ -32,7 +32,7 @@
 
 <div class="max-w-2xl mx-auto">
     <div class="mb-4">
-        <a href="{{ url_for('view_request', request_id=request.id) }}" class="text-sm text-brand-primary hover:text-brand-accent">
+        <a href="{{ url_for('core.view_request', request_id=request.id) }}" class="text-sm text-brand-primary hover:text-brand-accent">
             &larr; Back to Request Details
         </a>
     </div>
@@ -46,14 +46,12 @@
                 Confirm Asset Deployment
             </div>
             <div class="card-content space-y-6">
-                <!-- Request Info -->
                 <div class="p-4 bg-gray-50 rounded-lg border text-sm">
                     <p><strong>Request ID:</strong> #{{ request.id }}</p>
                     <p><strong>Retailer:</strong> {{ request.retailer_name }}</p>
                     <p><strong>Asset Model Requested:</strong> {{ request.asset_model }}</p>
                 </div>
                 
-                <!-- Form Fields -->
                 <div>
                     <label for="deployed_make" class="block text-sm font-medium text-gray-700 mb-1">Asset Make / Manufacturer</label>
                     {{ form.deployed_make(class="form-input", placeholder="e.g., Western, Voltas") }}
@@ -69,9 +67,7 @@
                     {% endif %}
                 </div>
 
-                <!-- Photo Sections -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Photo 1 -->
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-gray-700">Photo 1 (e.g., Fridge front)</label>
                         <button type="button" id="start-camera-1" class="btn btn-secondary w-full py-3">
@@ -86,7 +82,6 @@
                             <p class="mt-1 text-xs text-red-600">{{ form.deployment_photo1.errors[0] }}</p>
                         {% endif %}
                     </div>
-                    <!-- Photo 2 -->
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-gray-700">Photo 2 (e.g., Serial number plate)</label>
                          <button type="button" id="start-camera-2" class="btn btn-secondary w-full py-3">
@@ -103,7 +98,6 @@
                     </div>
                 </div>
                 
-                <!-- Submit Button -->
                 <div class="pt-4 border-t">
                     {{ form.submit(class="w-full btn btn-main-action py-3 text-base") }}
                 </div>
@@ -112,7 +106,6 @@
     </form>
 </div>
 
-<!-- Camera Modal -->
 <div id="camera-modal" class="fixed inset-0 bg-black bg-opacity-75 flex-col items-center justify-center z-50 p-4 hidden">
     <div class="bg-white rounded-lg p-4 w-full max-w-lg">
         <video id="video" autoplay playsinline class="w-full h-auto rounded-lg bg-gray-900"></video>
@@ -123,8 +116,7 @@
         <button type="button" id="close-camera-btn" class="w-full mt-2 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Close</button>
     </div>
 </div>
-<canvas id="canvas" class="hidden"></canvas> <!-- Canvas for capturing frame -->
-{% endblock %}
+<canvas id="canvas" class="hidden"></canvas> {% endblock %}
 
 {% block scripts %}
 <script>
@@ -247,4 +239,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
-

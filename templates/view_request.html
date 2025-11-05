@@ -50,7 +50,7 @@
 </style>
 <div class="max-w-4xl mx-auto">
     <div class="mb-4">
-        <a href="{{ url_for('dashboard') }}" class="text-sm text-brand-primary hover:text-brand-accent">
+        <a href="{{ url_for('core.dashboard') }}" class="text-sm text-brand-primary hover:text-brand-accent">
             &larr; Back to Dashboard
         </a>
     </div>
@@ -164,13 +164,13 @@
                     <dt class="font-medium text-gray-600 sm:col-span-2">Deployment Photos:</dt>
                     <dd class="sm:col-span-2 grid grid-cols-2 gap-4 mt-2">
                         {% if request.deployment_photo1_filename %}
-                        <a href="{{ url_for('uploaded_file', filename=request.deployment_photo1_filename) }}" target="_blank" class="block border rounded-lg overflow-hidden hover:opacity-80 transition duration-150">
-                            <img src="{{ url_for('uploaded_file', filename=request.deployment_photo1_filename) }}" class="object-cover w-full h-32">
+                        <a href="{{ url_for('core.uploaded_file', filename=request.deployment_photo1_filename) }}" target="_blank" class="block border rounded-lg overflow-hidden hover:opacity-80 transition duration-150">
+                            <img src="{{ url_for('core.uploaded_file', filename=request.deployment_photo1_filename) }}" class="object-cover w-full h-32">
                         </a>
                         {% endif %}
                         {% if request.deployment_photo2_filename %}
-                        <a href="{{ url_for('uploaded_file', filename=request.deployment_photo2_filename) }}" target="_blank" class="block border rounded-lg overflow-hidden hover:opacity-80 transition duration-150">
-                            <img src="{{ url_for('uploaded_file', filename=request.deployment_photo2_filename) }}" class="object-cover w-full h-32">
+                        <a href="{{ url_for('core.uploaded_file', filename=request.deployment_photo2_filename) }}" target="_blank" class="block border rounded-lg overflow-hidden hover:opacity-80 transition duration-150">
+                            <img src="{{ url_for('core.uploaded_file', filename=request.deployment_photo2_filename) }}" class="object-cover w-full h-32">
                         </a>
                         {% endif %}
                     </dd>
@@ -224,8 +224,8 @@
             <div class="bg-white p-6 rounded-lg shadow">
                  <h3 class="text-xl font-semibold border-b pb-2 mb-4 text-gray-800">Initial Shop Photo</h3>
                  {% if request.photo_filename %}
-                     <a href="{{ url_for('uploaded_file', filename=request.photo_filename) }}" target="_blank">
-                         <img src="{{ url_for('uploaded_file', filename=request.photo_filename) }}" alt="Retailer Photo" class="rounded-lg w-full">
+                     <a href="{{ url_for('core.uploaded_file', filename=request.photo_filename) }}" target="_blank">
+                         <img src="{{ url_for('core.uploaded_file', filename=request.photo_filename) }}" alt="Retailer Photo" class="rounded-lg w-full">
                      </a>
                  {% else %}
                      <p class="text-gray-500">No initial photo uploaded.</p>
@@ -254,13 +254,13 @@
         {% if request.status == 'Approved' and (current_user.role == 'Admin' or current_user.id == request.requester_id) %}
         <div class="text-center">
             <p class="text-gray-600 mb-4">This request has been approved and is ready for asset deployment.</p>
-            <a href="{{ url_for('confirm_deployment', request_id=request.id) }}" class="btn btn-success py-3 px-6 text-base">
+            <a href="{{ url_for('core.confirm_deployment', request_id=request.id) }}" class="btn btn-success py-3 px-6 text-base">
                 <i class="fa fa-check-circle mr-2"></i> Confirm Deployment
             </a>
         </div>
         {% elif current_user.role == 'BM' and request.status == 'Pending BM Approval' %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <form action="{{ url_for('approve_request', request_id=request.id) }}" method="POST"
+            <form action="{{ url_for('core.approve_request', request_id=request.id) }}" method="POST"
                   x-data="{ approvalType: '' }" class="p-4 border rounded-lg"
             >
                 <div class="space-y-4">
@@ -292,7 +292,7 @@
                     </button>
                 </div>
             </form>
-            <form action="{{ url_for('reject_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
+            <form action="{{ url_for('core.reject_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
                 <div class="space-y-4">
                     <label for="bm-reject-remarks" class="block text-sm font-medium text-gray-700">Reason for Rejection (Required)</label>
                     <textarea name="remarks" id="bm-reject-remarks" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-brand-primary focus:border-brand-primary" required></textarea>
@@ -305,7 +305,7 @@
         
         {% elif current_user.role == 'RH' and request.status == 'Pending RH Approval' %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <form action="{{ url_for('approve_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
+            <form action="{{ url_for('core.approve_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
                 <div class="space-y-4">
                     <label for="rh-approve-remarks" class="block text-sm font-medium text-gray-700">Optional Remarks (for Approval)</label>
                     <textarea name="remarks" id="rh-approve-remarks" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-brand-primary focus:border-brand-primary"></textarea>
@@ -314,7 +314,7 @@
                     </button>
                 </div>
             </form>
-            <form action="{{ url_for('reject_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
+            <form action="{{ url_for('core.reject_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
                 <div class="space-y-4">
                     <label for="rh-reject-remarks" class="block text-sm font-medium text-gray-700">Reason for Rejection (Required)</label>
                     <textarea name="remarks" id="rh-reject-remarks" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-brand-primary focus:border-brand-primary" required></textarea>
@@ -328,7 +328,7 @@
         {% elif current_user.role == 'Admin' and 'Pending' in request.status %}
         <p class="text-sm text-gray-600 mb-4">As an Admin, you can override the current approval status.</p>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <form action="{{ url_for('approve_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
+            <form action="{{ url_for('core.approve_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
                 <div class="space-y-4">
                     <label for="admin-approve-remarks" class="block text-sm font-medium text-gray-700">Optional Remarks (for Approval)</Cabel>
                     <textarea name="remarks" id="admin-approve-remarks" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-brand-primary focus:border-brand-primary"></textarea>
@@ -337,7 +337,7 @@
                     </button>
                 </div>
             </form>
-            <form action="{{ url_for('reject_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
+            <form action="{{ url_for('core.reject_request', request_id=request.id) }}" method="POST" class="p-4 border rounded-lg">
                 <div class="space-y-4">
                     <label for="admin-reject-remarks" class="block text-sm font-medium text-gray-700">Reason for Rejection (Required)</label>
                     <textarea name="remarks" id="admin-reject-remarks" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-brand-primary focus:border-brand-primary" required></textarea>

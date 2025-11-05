@@ -71,7 +71,7 @@
     .btn-secondary:hover { background-color: #f9fafb; /* bg-gray-50 */ }
 </style>
 
-<form id="request-form" class="max-w-2xl mx-auto" method="POST" action="{{ url_for('new_request') }}">
+<form id="request-form" class="max-w-2xl mx-auto" method="POST" action="{{ url_for('core.new_request') }}">
     {{ form.hidden_tag() }}
     <div class="card">
         <div class="card-header">
@@ -202,29 +202,17 @@
                     <i class="fa fa-camera mr-2"></i> Open Camera
                 </button>
                 
-                <!--
-                ============================================================
-                THIS IS THE MODIFIED SECTION
-                ============================================================
-                -->
                 <div id="camera-container" class="mt-4 hidden">
                     <video id="camera-video" playsinline autoplay class="w-full h-auto rounded-lg border bg-gray-900"></video>
                     <div class="mt-2 grid grid-cols-2 gap-2">
                          <button type="button" id="click-photo-btn" class="w-full btn btn-primary py-3">
                             Capture Photo
                         </button>
-                        <!-- NEW "Switch Camera" BUTTON -->
                         <button type="button" id="switch-camera-btn" class="w-full btn btn-secondary py-3">
                             <i class="fa fa-sync-alt mr-2"></i> Switch
                         </button>
                     </div>
                 </div>
-                <!--
-                ============================================================
-                END OF MODIFIED SECTION
-                ============================================================
-                -->
-
                 <div id="photo-preview-container" class="mt-4 hidden">
                     <img id="photo-preview" src="" alt="Photo Preview" class="w-full h-auto rounded-lg border shadow-sm">
                     <button type="button" id="retake-photo-btn" class="mt-2 w-full btn bg-yellow-500 text-white hover:bg-yellow-600 py-3">
@@ -343,7 +331,7 @@
 
         // 1. Load Distributors
         distributorSelect.innerHTML = '<option value="">Loading distributors...</option>';
-        fetch("{{ url_for('get_distributors') }}")
+        fetch("{{ url_for('core.get_distributors') }}")
             .then(response => response.json())
             .then(data => {
                 if (data.ok) {
@@ -544,7 +532,7 @@
                 formData.delete('signage_availability');
             }
 
-            fetch("{{ url_for('new_request') }}", {
+            fetch("{{ url_for('core.new_request') }}", {
                 method: 'POST',
                 body: formData, 
                 headers: {
@@ -565,7 +553,7 @@
                 if (result.success) {
                     // Success! Redirect to the new request page.
                     // The server flashes the success message.
-                    window.location.href = `{{ url_for('view_request', request_id=0) }}`.replace('0', result.request_id);
+                    window.location.href = `{{ url_for('core.view_request', request_id=0) }}`.replace('0', result.request_id);
                 } else {
                     // Validation errors from the server (form.errors)
                     let errorMsg = result.message || 'An unknown error occurred.';

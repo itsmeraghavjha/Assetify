@@ -6,7 +6,7 @@
     <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
         <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
         {% if current_user.role in ['SE', 'Admin', 'DB'] %}
-        <a href="{{ url_for('new_request') }}" class="btn btn-main-action shadow-lg hidden md:inline-flex">
+        <a href="{{ url_for('core.new_request') }}" class="btn btn-main-action shadow-lg hidden md:inline-flex">
             <i class="fa fa-plus-circle mr-2"></i> New Asset Request
         </a>
         {% endif %}
@@ -79,7 +79,7 @@
             {% endif %}
         </div>
         <div class="card-content">
-            <form action="{{ url_for('dashboard') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <form action="{{ url_for('core.dashboard') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div>
                     <label for="distributor" class="block text-sm font-medium text-gray-700 mb-1">Distributor Name</label>
                     <input type="text" name="distributor" id="distributor" class="form-input" placeholder="Search by name..." value="{{ search_values.distributor }}">
@@ -112,7 +112,7 @@
                     <button type="submit" class="btn btn-main-action w-full md:w-auto">
                         <i class="fa fa-search mr-2"></i> Filter
                     </button>
-                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary w-full md:w-auto mt-2 md:mt-0">
+                    <a href="{{ url_for('core.dashboard') }}" class="btn btn-secondary w-full md:w-auto mt-2 md:mt-0">
                         Clear
                     </a>
                 </div>
@@ -134,13 +134,10 @@
 
         <div class="overflow-x-auto">
             
-            {% set base_url = url_for('dashboard', 
+            {% set base_url = url_for('core.dashboard', 
                                     distributor=search_values.distributor, 
                                     status=search_values.status, 
-                                    requester=search_values.requester,
-                                    sort_by=current_sort,
-                                    order_by=current_order) %}
-
+                                    requester=search_values.requester) %}
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr class="text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
@@ -241,7 +238,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right text-sm">
-                            <a href="{{ url_for('view_request', request_id=request.id) }}" class="text-brand-primary hover:text-brand-accent font-medium">
+                            <a href="{{ url_for('core.view_request', request_id=request.id) }}" class="text-brand-primary hover:text-brand-accent font-medium">
                                 View <i class="fa fa-arrow-right ml-1"></i>
                             </a>
                         </td>
@@ -287,7 +284,7 @@
         
         <div class="space-y-4">
         {% for request in requests %}
-            <a href="{{ url_for('view_request', request_id=request.id) }}" class="block p-5 bg-white rounded-xl shadow-sm active:bg-gray-100 transition-colors">
+            <a href="{{ url_for('core.view_request', request_id=request.id) }}" class="block p-5 bg-white rounded-xl shadow-sm active:bg-gray-100 transition-colors">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="font-semibold text-brand-primary">Request #{{ request.id }}</p>
@@ -334,7 +331,7 @@
             </button>
         </div>
         
-        <form action="{{ url_for('export_excel') }}" method="GET" class="p-6 space-y-5">
+        <form action="{{ url_for('core.export_excel') }}" method="GET" class="p-6 space-y-5">
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">

@@ -4,14 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- ========================================================== -->
-    <!-- PWA / "Add to Homescreen" Functionality -->
     <meta name="theme-color" content="#008a4c"/>
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <!-- For Apple devices -->
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/icon-192.jpg') }}">
-    <!-- ========================================================== -->
-
     <title>{% block title %}Assetify{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -230,20 +225,13 @@
     </style>
 </head>
 <body class="bg-gray-100 flex flex-col min-h-screen">
-    <!-- 
-    ============================================================
-    THIS IS THE FIX
-    We set `active_page` to `request.endpoint` OR an empty string.
-    This prevents `active_page` from ever being `None`.
-    ============================================================
-    -->
     {% set active_page = request.endpoint or '' %}
 
     <nav class="bg-white shadow-sm border-b border-gray-200 hidden md:block">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <a href="{{ url_for('dashboard') }}" class="flex-shrink-0 flex items-center">
+                    <a href="{{ url_for('core.dashboard') }}" class="flex-shrink-0 flex items-center">
                         <img class="h-10 w-auto" src="{{ url_for('static', filename='images/heritage_logo.png') }}" alt="Heritage Icon">
                         <span class="ml-3 text-2xl font-bold text-brand-primary">Heritage Assetify</span>
                     </a>
@@ -251,31 +239,31 @@
 
                 {% if current_user.is_authenticated %}
                 <div class="flex items-center space-x-2">
-                    <a href="{{ url_for('dashboard') }}"
-                       class="px-3 py-2 rounded-lg text-sm font-medium {% if active_page == 'dashboard' %}text-brand-primary bg-brand-light{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
+                    <a href="{{ url_for('core.dashboard') }}"
+                       class="px-3 py-2 rounded-lg text-sm font-medium {% if active_page == 'core.dashboard' %}text-brand-primary bg-brand-light{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
                         <i class="fa fa-home mr-1.5"></i> Dashboard
                     </a>
                     
                     {% if current_user.role in ['SE', 'Admin', 'DB'] %}
-                    <a href="{{ url_for('new_request') }}"
-                       class="px-3 py-2 rounded-lg text-sm font-medium {% if active_page == 'new_request' %}text-brand-primary bg-brand-light{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
+                    <a href="{{ url_for('core.new_request') }}"
+                       class="px-3 py-2 rounded-lg text-sm font-medium {% if active_page == 'core.new_request' %}text-brand-primary bg-brand-light{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
                         <i class="fa fa-plus-circle mr-1.5"></i> New Request
                     </a>
                     {% endif %}
                     
                     {% if current_user.role == 'Admin' %}
-                    <a href="{{ url_for('manage_users') }}"
-                    class="px-3 py-2 rounded-lg text-sm font-medium {% if 'manage_users' in active_page or 'add_user' in active_page or 'edit_user' in active_page %}text-brand-primary bg-brand-light{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
+                    <a href="{{ url_for('admin.manage_users') }}"
+                    class="px-3 py-2 rounded-lg text-sm font-medium {% if 'admin.manage_users' in active_page or 'admin.add_user' in active_page or 'admin.edit_user' in active_page %}text-brand-primary bg-brand-light{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
                         <i class="fa fa-users mr-1.5"></i> Manage Users
                     </a>
 
-                    <a href="{{ url_for('manage_distributors') }}"
-                    class="px-3 py-2 rounded-lg text-sm font-medium {% if 'manage_distributors' in active_page or 'add_distributor' in active_page or 'edit_distributor' in active_page %}text-brand-primary bg-brand-light{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
+                    <a href="{{ url_for('admin.manage_distributors') }}"
+                    class="px-3 py-2 rounded-lg text-sm font-medium {% if 'admin.manage_distributors' in active_page or 'admin.add_distributor' in active_page or 'admin.edit_distributor' in active_page %}text-brand-primary bg-brand-light{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
                         <i class="fa fa-store mr-1.5"></i> Manage Distributors
                     </a>
                     
                 {% endif %}
-                    <a href="{{ url_for('logout') }}" class="px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-100 hover:text-red-900">
+                    <a href="{{ url_for('auth.logout') }}" class="px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-100 hover:text-red-900">
                         <i class="fa fa-sign-out-alt mr-1.5"></i> Logout
                     </a>
                 </div>
@@ -287,17 +275,17 @@
     <div class="md:hidden sticky top-0 bg-white shadow-sm z-40 p-4">
         <div class="flex justify-between items-center">
              <span class="text-xl font-bold text-brand-primary">
-                {% if active_page == 'dashboard' %}Dashboard
-                {% elif active_page == 'new_request' %}New Asset Request
-                {% elif 'manage_users' in active_page or 'add_user' in active_page or 'edit_user' in active_page %}Manage Users
-                {% elif 'view_request' in active_page %}Request Details
+                {% if active_page == 'core.dashboard' %}Dashboard
+                {% elif active_page == 'core.new_request' %}New Asset Request
+                {% elif 'admin.manage_users' in active_page or 'admin.add_user' in active_page or 'admin.edit_user' in active_page %}Manage Users
+                {% elif 'core.view_request' in active_page %}Request Details
                 {% else %}Heritage Assetify
                 {% endif %}
             </span>
             <div class="flex items-center space-x-4">
                 {% if current_user.is_authenticated %}
                 <span class="text-sm text-gray-700 font-medium">{{ current_user.name }}</span>
-                <a href="{{ url_for('logout') }}" class="text-gray-500 hover:text-brand-accent">
+                <a href="{{ url_for('auth.logout') }}" class="text-gray-500 hover:text-brand-accent">
                     <i class="fa fa-sign-out-alt fa-lg"></i>
                 </a>
                 {% endif %}
@@ -312,20 +300,20 @@
 
     {% if current_user.is_authenticated %}
     <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40 h-16 flex justify-around">
-        <a href="{{ url_for('dashboard') }}" class="flex-1 flex flex-col items-center justify-center text-sm font-medium {% if active_page == 'dashboard' %}text-brand-primary{% else %}text-gray-500{% endif %}">
+        <a href="{{ url_for('core.dashboard') }}" class="flex-1 flex flex-col items-center justify-center text-sm font-medium {% if active_page == 'core.dashboard' %}text-brand-primary{% else %}text-gray-500{% endif %}">
             <i class="fa fa-home fa-lg"></i>
             <span class="mt-1">Dashboard</span>
         </a>
 
-        {% if current_user.role in ['SE', 'Admin', 'DB',] %}
-        <a href="{{ url_for('new_request') }}" class="flex-1 flex flex-col items-center justify-center text-sm font-medium {% if active_page == 'new_request' %}text-brand-primary{% else %}text-gray-500{% endif %}">
+        {% if current_user.role in ['SE', 'Admin', 'DB'] %}
+        <a href="{{ url_for('core.new_request') }}" class="flex-1 flex flex-col items-center justify-center text-sm font-medium {% if active_page == 'core.new_request' %}text-brand-primary{% else %}text-gray-500{% endif %}">
             <i class="fa fa-plus-circle fa-lg"></i>
             <span class="mt-1">New Request</span>
         </a>
         {% endif %}
 
         {% if current_user.role == 'Admin' %}
-        <a href="{{ url_for('manage_users') }}" class="flex-1 flex flex-col items-center justify-center text-sm font-medium {% if 'manage_users' in active_page or 'add_user' in active_page or 'edit_user' in active_page %}text-brand-primary{% else %}text-gray-500{% endif %}">
+        <a href="{{ url_for('admin.manage_users') }}" class="flex-1 flex flex-col items-center justify-center text-sm font-medium {% if 'admin.manage_users' in active_page or 'admin.add_user' in active_page or 'admin.edit_user' in active_page %}text-brand-primary{% else %}text-gray-500{% endif %}">
             <i class="fa fa-users fa-lg"></i>
             <span class="mt-1">Users</span>
         </a>
@@ -380,8 +368,6 @@
         });
     </script>
     
-    <!-- ========================================================== -->
-    <!-- PWA: This script registers the service worker -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -394,8 +380,6 @@
             });
         }
     </script>
-    <!-- ========================================================== -->
-
     {% block scripts %}{% endblock %}
 </body>
 </html>
